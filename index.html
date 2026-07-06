@@ -4954,18 +4954,48 @@ function mergeData(remote) {
   if (!remote) return;
   var keys = ['exam_ds_records', 'exam_os_records', 'exam_turn', 'wb_ds', 'wb_os'];
   for (var i = 0; i < keys.length; i++) {
-    if (remote[keys[i]]) {
-      var local = localStorage.getItem(keys[i]);
-      // Only overwrite if remote is newer or local is empty
-      if (!local || remote[keys[i]].length > local.length) {
-        localStorage.setItem(keys[i], remote[keys[i]]);
+    var k = keys[i];
+    if (!remote[k]) continue;
+    var local = localStorage.getItem(k);
+
+    // exam_turn: always use the larger number
+    if (k === 'exam_turn') {
+      var localTurn = parseInt(local) || 0;
+      var remoteTurn = parseInt(remote[k]) || 0;
+      localStorage.setItem(k, '' + Math.max(localTurn, remoteTurn));
+      continue;
+    }
+
+    // If local has nothing, just take remote
+    if (!local) {
+      localStorage.setItem(k, remote[k]);
+      continue;
+    }
+
+    // Try JSON array union merge for wb_*/exam_*_records
+    try {
+      var localArr = JSON.parse(local);
+      var remoteArr = JSON.parse(remote[k]);
+      if (Array.isArray(localArr) && Array.isArray(remoteArr)) {
+        var merged = localArr.slice();
+        var seen = {};
+        for (var j = 0; j < localArr.length; j++) {
+          var key = localArr[j].uid || localArr[j].id || JSON.stringify(localArr[j]);
+          seen[key] = true;
+        }
+        for (var j = 0; j < remoteArr.length; j++) {
+          var rkey = remoteArr[j].uid || remoteArr[j].id || JSON.stringify(remoteArr[j]);
+          if (!seen[rkey]) {
+            merged.push(remoteArr[j]);
+            seen[rkey] = true;
+          }
+        }
+        localStorage.setItem(k, JSON.stringify(merged));
+      } else {
+        if (remote[k].length > local.length) localStorage.setItem(k, remote[k]);
       }
-      // For exam_turn, use the larger number
-      if (keys[i] === 'exam_turn') {
-        var localTurn = parseInt(local) || 0;
-        var remoteTurn = parseInt(remote[keys[i]]) || 0;
-        localStorage.setItem('exam_turn', Math.max(localTurn, remoteTurn));
-      }
+    } catch(e) {
+      if (remote[k].length > local.length) localStorage.setItem(k, remote[k]);
     }
   }
 }
@@ -4988,20 +5018,34 @@ function doSync() {
   var label = getEl('gistLabel');
   dot.className = 'gist-dot syncing';
   label.textContent = '同步中...';
-  var data = gatherLocalData();
-  var payload = {
-    description: GIST_DESC,
-    files: {}
-  };
-  payload.files[GIST_FILENAME] = { content: JSON.stringify(data) };
-  apiCall(token, 'PATCH', '/gists/' + gistId, payload, function() {
-    dot.className = 'gist-dot on';
-    label.textContent = '云同步已连接';
-    updateSyncTime();
+
+  // Step 1: Pull latest from Gist first (prevent overwriting other device's data)
+  apiCall(token, 'GET', '/gists/' + gistId, null, function(result) {
+    if (result.files && result.files[GIST_FILENAME]) {
+      try {
+        var remoteData = JSON.parse(result.files[GIST_FILENAME].content);
+        mergeData(remoteData);
+      } catch(e) { /* ignore parse error */ }
+    }
+    // Step 2: Push merged data back
+    var data = gatherLocalData();
+    var payload = {
+      description: GIST_DESC,
+      files: {}
+    };
+    payload.files[GIST_FILENAME] = { content: JSON.stringify(data) };
+    apiCall(token, 'PATCH', '/gists/' + gistId, payload, function() {
+      dot.className = 'gist-dot on';
+      label.textContent = '云同步已连接';
+      updateSyncTime();
+    }, function(err) {
+      dot.className = 'gist-dot on';
+      label.textContent = '推送失败: ' + (err.message || '网络错误');
+      setTimeout(doSync, 30000);
+    });
   }, function(err) {
     dot.className = 'gist-dot on';
-    label.textContent = '同步失败: ' + (err.message || '网络错误');
-    // Retry later
+    label.textContent = '拉取失败: ' + (err.message || '网络错误');
     setTimeout(doSync, 30000);
   });
 }
