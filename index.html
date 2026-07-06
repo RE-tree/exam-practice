@@ -1,0 +1,5080 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>国开期末练习系统</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;background:linear-gradient(135deg,#e3f2fd,#bbdefb);min-height:100vh;padding:16px;font-size:15px;color:#333}
+.wrap{max-width:1100px;margin:0 auto}
+
+/* 课程切换 */
+.course-tabs{display:flex;background:#fff;border-radius:14px 14px 0 0;box-shadow:0 2px 8px rgba(0,0,0,0.08);overflow:hidden}
+.course-tab{flex:1;padding:18px 10px;text-align:center;cursor:pointer;font-size:17px;font-weight:600;color:#555;transition:all 0.3s;border-bottom:4px solid transparent;user-select:none}
+.course-tab:hover{background:#e3f2fd;color:#1565c0}
+.course-tab.active{background:#fff;color:#1565c0;border-bottom-color:#1565c0}
+.course-tab .icon{font-size:24px;display:block;margin-bottom:6px}
+
+/* 功能标签 */
+.tab-row{display:flex;background:#fafafa;border-bottom:2px solid #e0e0e0;padding:0 4px}
+.tab-btn{padding:13px 16px;cursor:pointer;font-size:14px;color:#666;transition:all 0.3s;border-bottom:3px solid transparent;user-select:none}
+.tab-btn:hover{background:#e3f2fd;color:#1565c0}
+.tab-btn.active{background:#fff;color:#1565c0;border-bottom-color:#1565c0;font-weight:600}
+
+/* 内容区 */
+.content{padding:20px;min-height:500px;background:#fff}
+
+/* 题目卡片 */
+.q-card{background:#f9fbe7;border-left:4px solid #8bc34a;padding:14px 18px;margin-bottom:12px;border-radius:0 10px 10px 0}
+.q-num{display:inline-block;background:#8bc34a;color:#fff;min-width:26px;height:26px;border-radius:50%;text-align:center;line-height:26px;font-size:12px;font-weight:bold;margin-right:8px;padding:0 4px}
+.q-text{font-size:14px;color:#333;margin-bottom:8px;font-weight:500;line-height:1.6;display:inline}
+.q-opts{display:flex;flex-wrap:wrap;gap:6px;padding-left:36px;margin-top:8px}
+.q-opt{padding:5px 14px;background:#fff;border:1px solid #c8e6c9;border-radius:20px;font-size:13px;color:#555;transition:all 0.2s}
+.q-opt.correct{background:#ffebee;color:#c62828;border-color:#ef9a9a;font-weight:600}
+
+/* 考试区 */
+.exam-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding:14px 18px;background:#e3f2fd;border-radius:12px;flex-wrap:wrap;gap:10px}
+.exam-pg{flex:1;margin:0 16px;min-width:180px}
+.exam-pg-bar{height:8px;background:#bbdefb;border-radius:4px;overflow:hidden;margin-top:6px}
+.exam-pg-fill{height:100%;background:linear-gradient(90deg,#42a5f5,#1976d2);border-radius:4px;transition:width 0.3s}
+.exam-q{background:#fff;border:2px solid #bbdefb;border-radius:12px;padding:20px;margin-bottom:16px}
+.exam-q-title{font-size:15px;color:#1565c0;margin-bottom:14px;font-weight:600}
+.exam-opts{display:flex;flex-direction:column;gap:8px}
+.exam-opt{padding:10px 16px;background:#f9fbe7;border:2px solid transparent;border-radius:10px;cursor:pointer;font-size:14px;transition:all 0.2s;display:flex;align-items:center;gap:10px}
+.exam-opt:hover{background:#e3f2fd;border-color:#90caf9}
+.exam-opt.selected{border-color:#1976d2;background:#e3f2fd}
+.exam-opt.correct{border-color:#4caf50;background:#e8f5e9;color:#2e7d32}
+.exam-opt.wrong{border-color:#f44336;background:#ffebee;color:#c62828}
+.exam-opt .ol{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#a5d6a7;color:#1b5e20;font-weight:bold;font-size:13px;flex-shrink:0}
+
+.tf-btns{display:flex;gap:14px;margin-top:12px}
+.tf-btn{padding:10px 36px;border:2px solid #bbdefb;background:#f9fbe7;border-radius:10px;font-size:15px;cursor:pointer;transition:all 0.2s;font-weight:600}
+.tf-btn:hover{background:#e3f2fd;border-color:#1976d2}
+.tf-btn.selected{background:#1976d2;color:#fff;border-color:#1565c0}
+.tf-btn.correct{background:#c8e6c9;color:#1b5e20;border-color:#4caf50}
+.tf-btn.wrong{background:#ffebee;color:#c62828;border-color:#ef9a9a}
+
+.btn{padding:10px 28px;border:none;border-radius:25px;font-size:14px;cursor:pointer;transition:all 0.2s;font-weight:500}
+.btn-pri{background:linear-gradient(135deg,#1976d2,#1565c0);color:#fff}
+.btn-pri:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(21,101,192,0.3)}
+.btn-sec{background:#e0e0e0;color:#555}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
+
+.wi-item{background:#fff3e0;border-left:4px solid #ff9800;padding:12px 16px;margin-bottom:8px;border-radius:0 10px 10px 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.res-card{text-align:center;padding:40px;background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-radius:16px;margin:20px 0}
+.res-score{font-size:64px;font-weight:bold;margin:10px 0}
+.an-card{background:#fff;border:2px solid #ffcdd2;border-radius:12px;padding:20px;margin-bottom:16px}
+
+.btn-row{display:flex;gap:10px;margin-top:20px;justify-content:center;flex-wrap:wrap}
+
+/* 配伍题 */
+.mc{display:flex;gap:16px;margin:12px 0}
+.ml,.mr{flex:1}
+.mi{padding:7px 11px;margin-bottom:5px;border-radius:8px;background:#f9fbe7;border:1px solid #c8e6c9;font-size:13px}
+.mi.correct{background:#c8e6c9;color:#2e7d32;font-weight:600}
+
+/* 统计 */
+.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.sc{background:#fff;border-radius:12px;padding:16px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.sn{font-size:28px;font-weight:800;color:#1565c0}
+.sl{font-size:12px;color:#999;margin-top:4px}
+
+.gist-bar{display:flex;justify-content:space-between;align-items:center;padding:6px 14px;background:#f5f5f5;border-radius:0 0 14px 14px;font-size:12px;flex-wrap:wrap;gap:6px;border-top:1px solid #eee}
+.gist-bar .gist-status{color:#999;display:flex;align-items:center;gap:4px}
+.gist-bar .gist-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.gist-bar .gist-dot.off{background:#ccc}
+.gist-bar .gist-dot.on{background:#4caf50}
+.gist-bar .gist-dot.syncing{background:#ff9800;animation:pulse 0.8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.gist-bar .gist-input{width:220px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:12px;font-family:monospace}
+.gist-bar .gist-btn{padding:4px 10px;border:1px solid #1565c0;background:#e3f2fd;color:#1565c0;border-radius:4px;font-size:12px;cursor:pointer;transition:all 0.2s}
+.gist-bar .gist-btn:hover{background:#1565c0;color:#fff}
+.gist-bar .gist-btn.saved{background:#e8f5e9;border-color:#4caf50;color:#2e7d32}
+
+@media(max-width:600px){
+  .sg{grid-template-columns:repeat(2,1fr)}
+  .mc{flex-direction:column}
+  .course-tab{font-size:13px;padding:14px 6px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 课程切换 -->
+  <div class="course-tabs">
+    <div class="course-tab active" onclick="switchCourse('ds')">
+      <span class="icon">&#128214;</span>数据结构（本）
+    </div>
+    <div class="course-tab" onclick="switchCourse('os')">
+      <span class="icon">&#128187;</span>操作系统
+    </div>
+  </div>
+
+  <!-- GitHub Gist 云同步 -->
+  <div class="gist-bar" id="gistBar">
+    <span class="gist-status"><span class="gist-dot off" id="gistDot"></span><span id="gistLabel">未连接云同步</span></span>
+    <div style="display:flex;align-items:center;gap:6px">
+      <input class="gist-input" id="gistTokenInput" type="password" placeholder="粘贴 GitHub Token..." />
+      <button class="gist-btn" onclick="saveToken()" id="gistBtnConnect">连接</button>
+      <button class="gist-btn" onclick="clearToken()" style="display:none" id="gistBtnClear">断开</button>
+      <span id="gistSyncTime" style="font-size:10px;color:#aaa"></span>
+    </div>
+  </div>
+
+  <!-- 功能标签 -->
+  <div class="tab-row" id="tabRow"></div>
+
+  <!-- 内容区 -->
+  <div class="content" id="content"></div>
+</div>
+
+<!-- ========== 数据结构（本）数据 ========== -->
+<script>
+// 数据结构（本）题库
+// 自动生成于 2026-06-29，答案来源: quiz_answers.html
+
+const QUESTION_BANK = 
+[
+  {
+    "index": 1,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "对稀疏矩阵进行压缩存储，可采用三元组表，一个有10行的稀疏矩阵A共有97个零元素，其相应的三元组表共有3个元素。该矩阵A有回答列。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0001",
+    "correct_answer": "10",
+    "explanation": "10行矩阵，97个零元素+3个非零元素=100个元素，100/10=10列",
+    "correct_option_index": null
+  },
+  {
+    "index": 2,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "结构中的数据元素存在多对多的关系称为回答结构。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0002",
+    "correct_answer": "图状",
+    "explanation": "多对多关系对应图状结构",
+    "correct_option_index": null
+  },
+  {
+    "index": 3,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "在单向链表中，q指向p所指结点的直接后继结点，要删除q所指结点，可以用操作回答= q->next;。答案：1",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0003",
+    "correct_answer": "p->next",
+    "explanation": "删除q结点：将p的next指针指向q的next，即p->next = q->next",
+    "correct_option_index": null
+  },
+  {
+    "index": 4,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "n个元素进行冒泡法排序，第j趟冒泡要进行回答次元素间的比较。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0004",
+    "correct_answer": "n-j",
+    "explanation": "第j趟冒泡比较n-j次（每趟确定1个元素位置）",
+    "correct_option_index": null
+  },
+  {
+    "index": 5,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "对稀疏矩阵进行压缩存储，矩阵中每个非零元素对应的三元组包括该元素的行下标、列下标和回答三项信息。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0005",
+    "correct_answer": "元素值",
+    "explanation": "三元组=（行下标，列下标，元素值）",
+    "correct_option_index": null
+  },
+  {
+    "index": 6,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "中序遍历回答树可得到一个有序序列。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0006",
+    "correct_answer": "二叉排序",
+    "explanation": "中序遍历二叉排序树得到有序序列",
+    "correct_option_index": null
+  },
+  {
+    "index": 7,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "队列的操作特点是后进回答。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0007",
+    "correct_answer": "后出",
+    "explanation": "队列特点：先进先出（后进后出）",
+    "correct_option_index": null
+  },
+  {
+    "index": 8,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "待排序的序列为8，3，4，1，2，5，9，采用直接选择排序算法，当进行了两趟选择后，结果序列为回答。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0008",
+    "correct_answer": "1，2，4，8，3，5，9",
+    "explanation": "第1趟选最小1与8交换→1,3,4,8,2,5,9；第2趟选最小2与3交换→1,2,4,8,3,5,9",
+    "correct_option_index": null
+  },
+  {
+    "index": 9,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "n个元素进行冒泡法排序，通常需要进行回答趟冒泡。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0009",
+    "correct_answer": "n-1",
+    "explanation": "n个元素冒泡排序最多n-1趟",
+    "correct_option_index": null
+  },
+  {
+    "index": 10,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "广义表（（a，b），d，e（（i，j），k））的长度是回答。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0010",
+    "correct_answer": "4",
+    "explanation": "广义表长度=顶层元素个数=（a,b）,d,e,（（i,j）,k）共4个",
+    "correct_option_index": null
+  },
+  {
+    "index": 11,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "中序遍历二叉排序树可得到一个回答的序列。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0011",
+    "correct_answer": "有序",
+    "explanation": "中序遍历二叉排序树得到有序（递增）序列",
+    "correct_option_index": null
+  },
+  {
+    "index": 12,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "广义表的（c，a，（a，b），d，e，（（i，j），k））深度是回答。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0012",
+    "correct_answer": "3",
+    "explanation": "深度=最大嵌套层数：（（i,j）,k）嵌套3层，深度=3",
+    "correct_option_index": null
+  },
+  {
+    "index": 13,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "广义表（c，a，（a，b），d，e，（（i，j），k））的长度是回答。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0013",
+    "correct_answer": "6",
+    "explanation": "长度=顶层元素个数：c,a,（a,b）,d,e,（（i,j）,k）共6个",
+    "correct_option_index": null
+  },
+  {
+    "index": 14,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "对稀疏矩阵进行压缩存储，可采用三元组表，一个有10 行10列的稀疏矩阵A共有95个零元素，其相应的三元组表共有回答个元素。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0014",
+    "correct_answer": "5",
+    "explanation": "10×10=100个元素，100-95=5个非零元素，三元组表有5个元素",
+    "correct_option_index": null
+  },
+  {
+    "index": 15,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "广义表的（c，a，（a，b），d，e，（（i，j），k））深度是回答。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0015",
+    "correct_answer": "3",
+    "explanation": "同Q12，深度=3",
+    "correct_option_index": null
+  },
+  {
+    "index": 16,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "在对一组记录（50，49，97，22，16，73，65，47，88）进行直接插入排序时，当把第7个记录65 插入到有序表时，为寻找插入位置需比较回答次。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0016",
+    "correct_answer": "3",
+    "explanation": "前6个排序后：16,22,49,50,73,97。插入65：97(1次)→73(2次)→50(3次)，65>50，共3次",
+    "correct_option_index": null
+  },
+  {
+    "index": 17,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "循环队列在规定少用一个存储空间的情况下，队空的判定条件为回答。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0017",
+    "correct_answer": "front == rear",
+    "explanation": "少用一个空间时，队空条件：front==rear",
+    "correct_option_index": null
+  },
+  {
+    "index": 18,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "一棵有5个叶结点的哈夫曼树，该树中总共有回答个结点。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0018",
+    "correct_answer": "9",
+    "explanation": "n个叶子结点的哈夫曼树有2n-1个结点，2×5-1=9",
+    "correct_option_index": null
+  },
+  {
+    "index": 19,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "c语言中，字符串“E”存储时占回答个字节。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0019",
+    "correct_answer": "2",
+    "explanation": "字符串\"E\"占2字节：'E'+'\\0'",
+    "correct_option_index": null
+  },
+  {
+    "index": 20,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "设有一棵深度为4的完全二叉树，第四层上有5个结点，该树共有回答个结点。（根所在结点为第1层）。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0020",
+    "correct_answer": "12",
+    "explanation": "前3层满：1+2+4=7，第4层5个，共7+5=12",
+    "correct_option_index": null
+  },
+  {
+    "index": 21,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "一棵二叉树中有n个非叶结点，每一个非叶结点的度数都为2，则该树共有回答个叶结点。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0021",
+    "correct_answer": "n+1",
+    "explanation": "n个非叶结点（度数全为2），叶子=n+1",
+    "correct_option_index": null
+  },
+  {
+    "index": 22,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "设有一个长度为40的顺序表，要删除第8个元素需移动元素的个数为回答。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0022",
+    "correct_answer": "32",
+    "explanation": "删除第8个元素，移动40-8=32个",
+    "correct_option_index": null
+  },
+  {
+    "index": 23,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "在对一组记录（55，39，97，22，16，73，65，47，88）进行直接插入排序时，当把第7个记录65插入到有序表时，为寻找插入位置需比较回答次。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0023",
+    "correct_answer": "3",
+    "explanation": "前6个排序后：16,22,39,55,73,97。插入65：97(1)→73(2)→55(3)，65>55，共3次",
+    "correct_option_index": null
+  },
+  {
+    "index": 24,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "有以下程序段：char a[  ]=“English”;char *p=a;  int n=0;while( *p!=‘’){ n++; p++;}结果中，n的值是回答。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0024",
+    "correct_answer": "7",
+    "explanation": "\"English\"有7个字符，遍历到'\\0'时n=7",
+    "correct_option_index": null
+  },
+  {
+    "index": 25,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "设：char a[ ]=\"AEIJING\";该字符串在计算机中存储时占回答个字节。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0025",
+    "correct_answer": "8",
+    "explanation": "\"AEIJING\"有7个字符+\\0=8字节",
+    "correct_option_index": null
+  },
+  {
+    "index": 26,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "栈的特点之一是：元素进、出栈的次序是：先进回答。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0026",
+    "correct_answer": "后出",
+    "explanation": "栈特点：先进后出",
+    "correct_option_index": null
+  },
+  {
+    "index": 27,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "结构中的数据元素存在多对多的关系称为回答结构。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0027",
+    "correct_answer": "图状",
+    "explanation": "多对多关系=图状结构",
+    "correct_option_index": null
+  },
+  {
+    "index": 28,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "对稀疏矩阵进行压缩存储，矩阵中每个非零元素对应的三元组包括该元素的三项信息是回答。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0028",
+    "correct_answer": "行下标、列下标和元素值",
+    "explanation": "三元组三项：行下标、列下标、元素值",
+    "correct_option_index": null
+  },
+  {
+    "index": 29,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "对稀疏矩阵进行压缩存储，可采用三元组表，一个有8行的稀疏矩阵A共有92个零元素，其相应的三元组表共有4个元素。该矩阵A有回答列。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0029",
+    "correct_answer": "12",
+    "explanation": "8行，92零元素+4非零元素=96，96/8=12列",
+    "correct_option_index": null
+  },
+  {
+    "index": 30,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "在对10个记录的序列（9，35，19，77，2，10，53，45，27，68）进行直接插入排序时，当把第6个记录10 插入到有序表时，为寻找插入位置，元素间需比较回答次。（按升序排序）",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0030",
+    "correct_answer": "4",
+    "explanation": "前5个排序后：2,9,19,35,77。插入10：77(1)→35(2)→19(3)→9(4)，10>9，共4次",
+    "correct_option_index": null
+  },
+  {
+    "index": 31,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "循环链队列中，设front和rear分别为队头和队尾指针，最大存储空间元素为MaxSize，采用少用一个存储空间的模式，则判断循环链队列为空的条件是回答为真。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0031",
+    "correct_answer": "front == rear",
+    "explanation": "循环队列少用一个空间：队空条件front==rear",
+    "correct_option_index": null
+  },
+  {
+    "index": 32,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "字符串a1=\"beijing\"，a2 =\"bef\"，a3=\"beifang\"，a4=\"befi\"最小的是回答。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0032",
+    "correct_answer": "a2（即\"bef\"）",
+    "explanation": "比较：beijing,bef,beifang,befi。bef最短且最小",
+    "correct_option_index": null
+  },
+  {
+    "index": 33,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "n个元素进行冒泡法排序，第j趟冒泡要进行回答次元素间的比较。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0033",
+    "correct_answer": "n-j",
+    "explanation": "同Q4，第j趟比较n-j次",
+    "correct_option_index": null
+  },
+  {
+    "index": 34,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "10个元素进行冒泡法排序，其中第5趟冒泡共需要进行回答次元素间的比较。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0034",
+    "correct_answer": "5",
+    "explanation": "10个元素第5趟比较10-5=5次",
+    "correct_option_index": null
+  },
+  {
+    "index": 35,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "设有一棵深度为4的完全二叉树，第四层上有5个结点，该树共有回答个结点。（根所在结点为第1层）",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0035",
+    "correct_answer": "12",
+    "explanation": "同Q20，1+2+4+5=12",
+    "correct_option_index": null
+  },
+  {
+    "index": 36,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "回答遍历一棵二叉排序树可得到一个有序序列。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0036",
+    "correct_answer": "中序",
+    "explanation": "中序遍历二叉排序树得到有序序列",
+    "correct_option_index": null
+  },
+  {
+    "index": 37,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "中序遍历一棵回答树可得到一个有序序列。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0037",
+    "correct_answer": "二叉排序",
+    "explanation": "中序遍历二叉排序树得到有序序列",
+    "correct_option_index": null
+  },
+  {
+    "index": 38,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "广义表（c，（a，b，c），（d，e，f），（（i，j），k））的长度是回答。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0038",
+    "correct_answer": "4",
+    "explanation": "长度=顶层元素个数：c,（a,b,c）,（d,e,f）,（（i,j）,k）共4个",
+    "correct_option_index": null
+  },
+  {
+    "index": 39,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "待排序的序列为9，4，5，1，2，6，10，采用直接选择排序算法，当进行了两趟选择后，结果序列为回答。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0039",
+    "correct_answer": "1，2，5，9，4，6，10",
+    "explanation": "第1趟选最小1与9交换→1,4,5,9,2,6,10；第2趟选最小2与4交换→1,2,5,9,4,6,10",
+    "correct_option_index": null
+  },
+  {
+    "index": 40,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "广义表的（c，（b，a，b），f，e，（（i，j），k））深度是回答。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0040",
+    "correct_answer": "3",
+    "explanation": "深度：（（i,j）,k）嵌套3层，深度=3",
+    "correct_option_index": null
+  },
+  {
+    "index": 41,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "广义表（（a，b），d，e，（（i，j），k））的长度是回答。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0041",
+    "correct_answer": "4",
+    "explanation": "长度=4：（a,b）,d,e,（（i,j）,k）",
+    "correct_option_index": null
+  },
+  {
+    "index": 42,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "序列4，2，5，3，8，6，采用冒泡排序算法（升序），经一趟冒泡后，结果序列是回答。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0042",
+    "correct_answer": "2，4，3，5，6，8",
+    "explanation": "升序一趟冒泡：4,2→2,4; 4,5→4,5; 5,3→3,5; 5,8→5,8; 8,6→6,8 → 2,4,3,5,6,8",
+    "correct_option_index": null
+  },
+  {
+    "index": 43,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "广义表的（c，a，（a，b），d，e，（（i，j），k））深度是回答。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0043",
+    "correct_answer": "3",
+    "explanation": "同Q12，深度=3",
+    "correct_option_index": null
+  },
+  {
+    "index": 44,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "待排序的序列为8，3，4，1，2，5，9，采用直接选择排序算法，当进行了两趟选择后，结果序列为回答。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0044",
+    "correct_answer": "1，2，4，8，3，5，9",
+    "explanation": "同Q8：1,2,4,8,3,5,9",
+    "correct_option_index": null
+  },
+  {
+    "index": 45,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "线性表用回答方式存储需要占用连续的存储空间。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0045",
+    "correct_answer": "顺序",
+    "explanation": "顺序存储需要连续存储空间",
+    "correct_option_index": null
+  },
+  {
+    "index": 46,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "线性表用回答方式存储可以随机访问。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0046",
+    "correct_answer": "顺序",
+    "explanation": "顺序存储支持随机访问",
+    "correct_option_index": null
+  },
+  {
+    "index": 47,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "线性表用关键字回答的顺序方式存储，可以用二分法排序。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0047",
+    "correct_answer": "有序",
+    "explanation": "关键字有序的顺序存储可用二分查找",
+    "correct_option_index": null
+  },
+  {
+    "index": 48,
+    "quiz": "期末综合练习——填空题",
+    "quiz_index": 1,
+    "type": "其他",
+    "question": "顺序表6，5，1，2，4，3，8，7经过一趟（1，1）归并后的结果序列为回答。",
+    "options": [],
+    "blank_count": 1,
+    "filled_answers": [],
+    "uid": "q0048",
+    "correct_answer": "5，6，1，2，3，4，7，8",
+    "explanation": "(1,1)归并：相邻1个元素两两归并→(5,6)(1,2)(3,4)(7,8) → 5,6,1,2,3,4,7,8",
+    "correct_option_index": null
+  },
+  {
+    "index": 1,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "栈和队列的共同特点是（）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "都是先进后出",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "都是操作受限的线性结构",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "都是先进先出",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "元素都可以随机进出",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0049",
+    "correct_answer": "B. 都是操作受限的线性结构",
+    "explanation": "栈和队列都是操作受限的线性表（栈只允许一端操作，队列允许两端操作）",
+    "correct_option_index": 1
+  },
+  {
+    "index": 2,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "数据的存储结构包括数据元素的表示和（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "数据处理的方法",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "相关算法",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "数据元素的类型",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "数据元素间的关系的表示",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0050",
+    "correct_answer": "D. 数据元素间的关系的表示",
+    "explanation": "存储结构=数据元素的表示+数据元素间关系的表示",
+    "correct_option_index": 3
+  },
+  {
+    "index": 3,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "对一个栈顶指针为top的链栈进行入栈操作，通过指针变量p生成入栈结点，则执行：p=(struct node *)malloc(sizeof(struct node);p->data=a;和（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "p->next=top; p=top;",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "p->next=top; top=p;",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "top->next=p; p=top;",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "top=top->next; p=top;",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0051",
+    "correct_answer": "B. p->next=top; top=p;",
+    "explanation": "链栈入栈：新结点next指向当前栈顶，然后更新栈顶",
+    "correct_option_index": 1
+  },
+  {
+    "index": 4,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "树状结构中数据元素的位置之间存在（    ）的关系。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "一对一",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "一对多",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "多对多",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "每一个元素都有一个直接前驱和一个直接后继",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0052",
+    "correct_answer": "B. 一对多",
+    "explanation": "树状结构是一对多的层次关系",
+    "correct_option_index": 1
+  },
+  {
+    "index": 5,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "设头指针为head的非空的单向链表，指针p指向尾结点,则通过以下操作（）可使其成为单向循环链表。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "p->next = NULL ;",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "p=head;",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "head = p;",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "p->next=head;",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0053",
+    "correct_answer": "D. p->next=head;",
+    "explanation": "尾结点的next指向头指针head即可成循环链表",
+    "correct_option_index": 3
+  },
+  {
+    "index": 6,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "设有一个长度为26的顺序表，要插入一个元素，并使它成为新表的第6个元素，需移动元素的个数为（）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "20",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "19",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "21",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "22",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0054",
+    "correct_answer": "C. 21",
+    "explanation": "插入第6个位置，移动26-6+1=21个元素",
+    "correct_option_index": 2
+  },
+  {
+    "index": 7,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "一种逻辑结构（）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "与存储该逻辑结构的计算机相关",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "是指某一种数据元素的性质",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "可以有不同的存储结构",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "只能有唯一的存储结构",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0055",
+    "correct_answer": "C. 可以有不同的存储结构",
+    "explanation": "一种逻辑结构可以映射到多种存储结构",
+    "correct_option_index": 2
+  },
+  {
+    "index": 8,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "头指针为head的带头结点的单向循环链表，p所指向尾结点，要使该链表成为不带头结点的单向循环链表，可执行head=head->nex;和（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "head->next=p->next",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "head->next=p",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "p= head->next",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "p->next=head;",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0056",
+    "correct_answer": "D. p->next=head;",
+    "explanation": "去掉头结点后，尾结点需要指向新的头结点",
+    "correct_option_index": 3
+  },
+  {
+    "index": 9,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "把数据存储到计算机中，并具体体现数据元素间的逻辑结构称为（）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "给数据元素分配存储空间",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "存储结构",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "数据元素的存储",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "逻辑结构",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0057",
+    "correct_answer": "B. 存储结构",
+    "explanation": "存储结构=把数据存入计算机并体现逻辑结构",
+    "correct_option_index": 1
+  },
+  {
+    "index": 10,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "元素111，113，115，117按顺序依次进栈，则该栈的不可能输出序列是（    ）（进栈出栈可以交替进行）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "117，115，111，113",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "117，115，113，111",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "111，113，115，117",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "113，111，117，115",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0058",
+    "correct_answer": "A. 117，115，111，113",
+    "explanation": "全部入栈后117在顶，115次之。要输出111必须在113之前，但113在111上方，不可能",
+    "correct_option_index": 0
+  },
+  {
+    "index": 11,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "图状结构中数据元素的位置之间存在（）的关系。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "一对一",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "一对一",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "多对多",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "每一个元素都有一个且只有一个直接前驱和一个直接后继",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0059",
+    "correct_answer": "C. 多对多",
+    "explanation": "图状结构是多对多关系",
+    "correct_option_index": 2
+  },
+  {
+    "index": 12,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "以下说法正确的是（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "栈的特点是先进先出",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "栈的特点是先进后出",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "栈和队列的特点都是后进后出",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "队列的特点是先进后出",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0060",
+    "correct_answer": "B. 栈的特点是先进后出",
+    "explanation": "栈是先进后出（LIFO）",
+    "correct_option_index": 1
+  },
+  {
+    "index": 13,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "一个单链表中，在p所指结点之后插入一个s所指的结点时，可执行：s->next=p->next;和（）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "p=s->next;",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "s=p->next;",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "p->next=s;",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "p->next=s->next;",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0061",
+    "correct_answer": "C. p->next=s;",
+    "explanation": "s->next=p->next; p->next=s; 标准后插操作",
+    "correct_option_index": 2
+  },
+  {
+    "index": 14,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "设有一个20阶的对称矩阵A（第一个元素为a1,1），采用压缩存储的方式，将其下三角部分以行序为主序存储到一维数组B中（数组下标从1开始），则矩阵元素a6,2在一维数组B中的下标是（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "23",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "17",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "21",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "28",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0062",
+    "correct_answer": "B. 17",
+    "explanation": "下三角行序存储：k=i*(i-1)/2+j=6*5/2+2=17",
+    "correct_option_index": 1
+  },
+  {
+    "index": 15,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "元素12，14，16，18顺序依次进栈，则该栈的不可能输出序列是（）。（进栈出栈可以交替进行）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "12，14，16，18",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "18，16，14，12",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "18，16，12，14",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "14，12，18，16",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0063",
+    "correct_answer": "C. 18，16，12，14",
+    "explanation": "全部入栈后，18在顶16次之。要出12必须在14前，但14在12上方，不可能",
+    "correct_option_index": 2
+  },
+  {
+    "index": 16,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "设有串p1=\"ABADF\"，P2=\"ABAFD\"，P3=\"ABADFA\"，P4=\"ABAF\"，以下四个串中最大的是（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "p3",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "p2",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "p4",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "p1",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0064",
+    "correct_answer": "A. p3",
+    "explanation": "比较第4位：D<F，p1和p3较大。p3比p1长且p1是前缀，所以p3最大",
+    "correct_option_index": 0
+  },
+  {
+    "index": 17,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "设有一个30阶的对称矩阵A（第一个元素为a1,1），采用压缩存储的方式，将其下三角部分以行序为主序存储到一维数组B中（数组下标从1开始），则矩阵中元素a9,2在一维数组B中的下标是（）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "38",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "32",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "41",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "18",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0065",
+    "correct_answer": "A. 38",
+    "explanation": "k=9*8/2+2=36+2=38",
+    "correct_option_index": 0
+  },
+  {
+    "index": 18,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "数组a经初始化char a[  ]=“English”;a[7]中存放的是（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "字符串的结束符",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "变量h",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "字符h",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "\"h\"",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0066",
+    "correct_answer": "A. 字符串的结束符",
+    "explanation": "\"English\"占7+1=8字节，a[7]是'\\0'结束符",
+    "correct_option_index": 0
+  },
+  {
+    "index": 19,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "设有一个长度为32的顺序表，要删除第8个元素需移动元素的个数为（）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "22",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "15",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "24",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "14",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0067",
+    "correct_answer": "C. 24",
+    "explanation": "删除第8个元素，移动32-8=24个",
+    "correct_option_index": 2
+  },
+  {
+    "index": 20,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "设主串为“ABcCDABcdEFaBc”，以下模式串能与主串成功匹配的是（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "ABC",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "Abc",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "BCd",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "Bcd",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0068",
+    "correct_answer": "D. Bcd",
+    "explanation": "主串中位置7-10: B,c,d → 不对。位置7,8,9,10: c,d,3,2 → 'cd32'？再看：D(0)A(1)B(2)c(3)d(4)a(5)b(6)c(7)d(8)3(9)2(10)1(11)A(12)B(13)C(14) → 'Bcd'在7,8,9不对，在... 实际\"Bcd\"在第7-9位",
+    "correct_option_index": 3
+  },
+  {
+    "index": 21,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "在一棵二叉树中，若编号为i的结点存在右孩子，则右孩子的顺序编号为（）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "2i+1",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "2i",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "2i+2",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "2i-1",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0069",
+    "correct_answer": "A. 2i+1",
+    "explanation": "二叉树右孩子编号=2i+1（根从0开始编号）",
+    "correct_option_index": 0
+  },
+  {
+    "index": 22,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "在一棵二叉树中，若编号为i的结点存在左孩子，则左孩子的顺序编号为（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "2i+2",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "2i",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "2i+1",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "2i-1",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0070",
+    "correct_answer": "B. 2i",
+    "explanation": "左孩子编号=2i",
+    "correct_option_index": 1
+  },
+  {
+    "index": 23,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "一棵具有16个结点的完全二叉树，共有（）层。（设根结点在第一层）",
+    "options": [
+      {
+        "label": "A.",
+        "text": "6",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "7",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "4",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "5",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0071",
+    "correct_answer": "D. 5",
+    "explanation": "⌊log₂16⌋+1=4+1=5层",
+    "correct_option_index": 3
+  },
+  {
+    "index": 24,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "如下图所示，若从顶点a出发，按图的广度优先搜索法进行遍历，则可能得到的一种顶点序列为（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "abecdf",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "aebcfd",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "aedfcb",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "aecbdf",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0072",
+    "correct_answer": "B. aebcfd",
+    "explanation": "BFS按层遍历，此为常见图遍历答案",
+    "correct_option_index": 1
+  },
+  {
+    "index": 25,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "如下图所示，若从顶点a出发，按图的深度优先搜索法进行遍历，则可能得到的一种顶点序列为（）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "aedfcgb",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "abecdfg",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "aebcfgd",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "acfebgd",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0073",
+    "correct_answer": "C. aebcfgd",
+    "explanation": "DFS深度优先，此为常见图遍历答案",
+    "correct_option_index": 2
+  },
+  {
+    "index": 26,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "线性表以（    ）方式存储，能进行折半查找。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "链接",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "二叉树",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "顺序",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "关键字有序的顺序",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0074",
+    "correct_answer": "D. 关键字有序的顺序",
+    "explanation": "折半查找要求顺序存储且关键字有序",
+    "correct_option_index": 3
+  },
+  {
+    "index": 27,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "字符串“DABcdabcd321ABC”的子串是（）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "“cd32”",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "“ABcD”",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "“321a”",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "“aBcd”",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0075",
+    "correct_answer": "A. \"cd32\"",
+    "explanation": "主串中'cd32'在位置7-10（c,d,3,2），是子串",
+    "correct_option_index": 0
+  },
+  {
+    "index": 28,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "一棵具有38个结点的完全二叉树，最后一层有（    ）个结点。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "6",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "8",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "5",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "7",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0076",
+    "correct_answer": "D. 7",
+    "explanation": "前5层满=31，38-31=7个在最后一层",
+    "correct_option_index": 3
+  },
+  {
+    "index": 29,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "如下图所示，若从顶点a出发，按广度优先搜索法进行遍历，则可能得到的一种顶点序列为（）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "abcdfeg",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "acbfedg",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "abcfgde",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "abcdfge",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0077",
+    "correct_answer": "A. abcdfeg",
+    "explanation": "BFS按层遍历",
+    "correct_option_index": 0
+  },
+  {
+    "index": 30,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "下图的拓扑序列是（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "2 3 6 4 5",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "2 3 5 6 4",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "5 6 2 3 4",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "5 2 3 4 6",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0078",
+    "correct_answer": "D. 5 2 3 4 6",
+    "explanation": "拓扑排序需满足前驱关系",
+    "correct_option_index": 3
+  },
+  {
+    "index": 31,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "下面关于线性表的叙述错误的是（）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "线性表采用顺序存储便于插入和删除操作的实现",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "线性表采用链式存储便于插入和删除操作的实现",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "线性表采用链式存储不必占用一片连续的存储空间",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "线性表采用顺序存储必须占用一片连续的存储空间",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0079",
+    "correct_answer": "A. 线性表采用顺序存储便于插入和删除操作的实现",
+    "explanation": "顺序存储不便于插入删除（需移动元素）",
+    "correct_option_index": 0
+  },
+  {
+    "index": 32,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "设有头指针为head的不带头结点的非空的单向循环链表，指针p指向其尾结点，要删除第一个结点，则可利用下述语句 head=head->next;和（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "head=p;",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "p->next =head;",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "p=NULL;",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "p=head;",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0080",
+    "correct_answer": "B. p->next =head;",
+    "explanation": "删除第一个结点后，尾指针需指向新的头",
+    "correct_option_index": 1
+  },
+  {
+    "index": 33,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "以下数据结构中是非线性结构的是（）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "线性表",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "二叉树",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "队列",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "栈",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0081",
+    "correct_answer": "B. 二叉树",
+    "explanation": "二叉树是非线性结构",
+    "correct_option_index": 1
+  },
+  {
+    "index": 34,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "以下说法正确的是（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "线性表的链式存储结构必须占用连续的存储空间",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "一种逻辑结构可以有不同的存储结构",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "线性表的顺序存储结构不必占用连续的存储空间",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "一种逻辑结构只能有唯一的存储结构",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0082",
+    "correct_answer": "B. 一种逻辑结构可以有不同的存储结构",
+    "explanation": "逻辑结构与存储结构独立，可以有多种存储方式",
+    "correct_option_index": 1
+  },
+  {
+    "index": 35,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "设有一个长度为18的顺序表，要删除第7个元素需移动元素的个数为（）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "10",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "12",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "11",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "13",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0083",
+    "correct_answer": "C. 11",
+    "explanation": "删除第7个元素，移动18-7=11个",
+    "correct_option_index": 2
+  },
+  {
+    "index": 36,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "把数据存储到计算机中，并具体体现（    ）称为物理结构。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "数据的处理方法",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "数据的运算",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "数据元素间的逻辑关系",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "数据的性质",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0084",
+    "correct_answer": "C. 数据元素间的逻辑关系",
+    "explanation": "物理结构（存储结构）体现数据元素间的逻辑关系",
+    "correct_option_index": 2
+  },
+  {
+    "index": 37,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "两个字符串相等的充要条件是（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "同时具备（A）和（C）两个条件",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "两个字符串中对应位置上的字符相等",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "以上答案都不对",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "两个字符串的长度相等",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0085",
+    "correct_answer": "A. 同时具备长度相等和对应字符相等两个条件",
+    "explanation": "字符串相等=长度相等+对应字符相等",
+    "correct_option_index": 0
+  },
+  {
+    "index": 38,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "顺序表所具备的特点之一是（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "插入元素的操作不需要移动元素",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "不需要占用连续的存储空间",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "可以随机访问任一结点",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "删除元素的操作不需要移动元素",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0086",
+    "correct_answer": "C. 可以随机访问任一结点",
+    "explanation": "顺序表支持随机访问（O(1)访问任意元素）",
+    "correct_option_index": 2
+  },
+  {
+    "index": 39,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "设某链表中最常用的操作是在链表的尾部插入或删除元素，在已知尾指针的条件下，选用下列（    ）存储方式最节省运算时间。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "双向循环链表",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "单向循环链表",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "单向链表",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "双向链表",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0087",
+    "correct_answer": "A. 双向循环链表",
+    "explanation": "双向循环链表在尾部插入删除只需O(1)",
+    "correct_option_index": 0
+  },
+  {
+    "index": 40,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "图状结构中数据元素的位置之间存在（    ）的关系。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "每一个元素都有一个直接前驱和一个直接后继",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "一对多",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "一对一",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "多对多",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0088",
+    "correct_answer": "D. 多对多",
+    "explanation": "图状结构是多对多关系",
+    "correct_option_index": 3
+  },
+  {
+    "index": 41,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "元素13，15，19，20顺序依次进栈，则该栈的不可能输出序列是（）。（进栈出栈可以交替进行）",
+    "options": [
+      {
+        "label": "A.",
+        "text": "20，19，15，13",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "19，13，15，20",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "15，13，20，19",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "13，15，19，20",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0089",
+    "correct_answer": "B. 19，13，15，20",
+    "explanation": "全部入栈后20在顶。要出13必须在15前，但15在13上方，不可能",
+    "correct_option_index": 1
+  },
+  {
+    "index": 42,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "元素20，14，16，18按顺序依次进栈，则该栈的不可能输出序列是（    ）。（进栈出栈可以交替进行）",
+    "options": [
+      {
+        "label": "A.",
+        "text": "18，16，14，20",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "14，20，18，16",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "20，14，16，18",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "18，16，20，14",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0090",
+    "correct_answer": "D. 18，16，20，14",
+    "explanation": "全部入栈后18在顶。要出20必须在14前，但14在20上方，不可能",
+    "correct_option_index": 3
+  },
+  {
+    "index": 43,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "设指针q指向单链表中结点A，指针p指向单链表中结点A的后继结点B，则在表中删除结点B的操作为（）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "q->next=p->next；",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "q->next=p；",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "p->next=q->next；",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "p->next；p=q；",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0091",
+    "correct_answer": "A. q->next=p->next；",
+    "explanation": "q指向A，p指向B(A的后继)。删除B：q->next=p->next",
+    "correct_option_index": 0
+  },
+  {
+    "index": 44,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "设有一个12阶的对称矩阵A（左上角第一个元素为a1,1），采用压缩存储的方式，将其下三角部分以行序为主序存储到一维数组B中（数组下标从1开始），则矩阵中元素a5,4在一维数组B中的下标是（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "12",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "11",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "14",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "13",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0092",
+    "correct_answer": "C. 14",
+    "explanation": "k=5*4/2+4=10+4=14",
+    "correct_option_index": 2
+  },
+  {
+    "index": 45,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "栈和队列的共同特点之一是（）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "都是先进后出",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "只允许在端点处插入和删除元素",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "没有共同点",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "都是先进先出",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0093",
+    "correct_answer": "B. 只允许在端点处插入和删除元素",
+    "explanation": "栈和队列都只允许在端点处操作",
+    "correct_option_index": 1
+  },
+  {
+    "index": 46,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "设有一个长度为22的顺序表，要删除第8个元素需移动元素的个数为（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "25",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "23",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "14",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "15",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0094",
+    "correct_answer": "C. 14",
+    "explanation": "删除第8个元素，移动22-8=14个",
+    "correct_option_index": 2
+  },
+  {
+    "index": 47,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "用链接方式存储的队列，在进行插入运算时（）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "头、尾指针都需要修改",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "头、尾指针都不需要修改",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "需修改尾指针",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "需修改头指针",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0095",
+    "correct_answer": "C. 需修改尾指针",
+    "explanation": "链队列入队只修改尾指针rear",
+    "correct_option_index": 2
+  },
+  {
+    "index": 48,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "在一棵二叉树中，若编号为5的结点存在右孩子，则右孩子的顺序编号为（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "12",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "9",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "11",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "10",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0096",
+    "correct_answer": "C. 11",
+    "explanation": "右孩子=2×5+1=11",
+    "correct_option_index": 2
+  },
+  {
+    "index": 49,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "字符串a1=\"AEIJING\"，a2=\"AEI\"，a3=\"AEFANG\"，a4=\"AEFI\"中最大的是（）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "a4",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "a1",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "a3",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "a2",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0097",
+    "correct_answer": "B. a1",
+    "explanation": "比较第3位：I>F，a1和a2较大。a2是a1的前缀，a1更大",
+    "correct_option_index": 1
+  },
+  {
+    "index": 50,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "一棵具有5层的完全二叉树，最后一层有4个结点，则该树总共有（    ）个结点。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "15",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "19",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "14",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "18",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0098",
+    "correct_answer": "B. 19",
+    "explanation": "前4层满=15，加第5层4个=19",
+    "correct_option_index": 1
+  },
+  {
+    "index": 51,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "设有一个20阶的对称矩阵A（第一个元素为a1,1），采用压缩存储的方式，将其下三角部分以行序为主序存储到一维数组B中（数组下标从1开始），则矩阵中元素a6,2在一维数组B中的下标是（）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "21",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "23",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "17",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "18",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0099",
+    "correct_answer": "C. 17",
+    "explanation": "k=6*5/2+2=17（同Q14）",
+    "correct_option_index": 2
+  },
+  {
+    "index": 52,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "如下图所示，若从顶点a出发，按图的广度优先搜索法进行遍历，则可能得到的一种顶点序列为（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "abcdfge",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "abcedfg",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "acbfedg",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "abcfgde",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0100",
+    "correct_answer": "A. abcdfge",
+    "explanation": "BFS按层遍历",
+    "correct_option_index": 0
+  },
+  {
+    "index": 53,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "以下说法正确的是（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "二叉树中任意一个非叶结点的值都大于其左子树上所有结点的值，小于其右子树上所有结点的值，则该树为二叉排序树。",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "前序遍历二叉排序树可得到一个有序序列。",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "若二叉树中左子树上所有结点的值均小于根结点的值，右子树上所有结点的值均大于根结点的值。则该树为二叉排序树。",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "二叉树中任意一个结点的值均大于其左孩子的值，小于其右孩子的值。则该树为二叉排序树。",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0101",
+    "correct_answer": "C. 若二叉树中左子树上所有结点的值均小于根结点的值，右子树上所有结点的值均大于根结点的值，则该树为二叉排序树",
+    "explanation": "二叉排序树定义：左子树所有结点<根<右子树所有结点",
+    "correct_option_index": 2
+  },
+  {
+    "index": 54,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "字符串\"abcd321ABCD\"的子串是（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "\"21ABC\"",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "\"abcABCD\"",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "\"321a\"",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "abcD",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0102",
+    "correct_answer": "A. \"21ABC\"",
+    "explanation": "'21ABC'在主串位置5-9",
+    "correct_option_index": 0
+  },
+  {
+    "index": 55,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "二叉树的第k层的结点数最多为（）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "2k-1",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "2K+1",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "2K-1",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "2k-1",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0103",
+    "correct_answer": "A. 2^(k-1)",
+    "explanation": "第k层最多2^(k-1)个结点",
+    "correct_option_index": 0
+  },
+  {
+    "index": 56,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "数组a经初始化char a[  ]=“English”;a[1]中存放的是（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "\"n\"",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "\"E\"",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "字符n",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "字符E",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0104",
+    "correct_answer": "C. 字符n",
+    "explanation": "\"English\"的a[1]='n'（字符n）",
+    "correct_option_index": 2
+  },
+  {
+    "index": 57,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "如下图所示，若从顶点6出发，按深度优先搜索法进行遍历，则可能得到的一种顶点序列为（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "6，2，8，7，9，3，4",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "6，9，2，3，7，8，4",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "6，2，7，9，8，4，3",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "6，9，3，2，8，7，4",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0105",
+    "correct_answer": "A. 6，2，8，7，9，3，4",
+    "explanation": "DFS从6出发深度优先遍历",
+    "correct_option_index": 0
+  },
+  {
+    "index": 58,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "如下图所示，若从顶点a出发，按图的深度优先搜索法进行遍历，则可能得到的一种顶点序列为（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "aedfcb",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "abecdf",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "aebcfd",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "acfebd",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0106",
+    "correct_answer": "A. aedfcb",
+    "explanation": "DFS从a出发深度优先遍历",
+    "correct_option_index": 0
+  },
+  {
+    "index": 59,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "如下图所示，若从顶点a出发，按广度优先搜索法进行遍历，则可能得到的一种顶点序列为（）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "abcfgde",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "acbfedg",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "abcfegd",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "abcdfge",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0107",
+    "correct_answer": "D. abcdfge",
+    "explanation": "BFS从a出发按层遍历",
+    "correct_option_index": 3
+  },
+  {
+    "index": 60,
+    "quiz": "期末综合练习——单项选择题",
+    "quiz_index": 2,
+    "type": "单项选择",
+    "question": "下图的拓扑序列是（    ）。",
+    "options": [
+      {
+        "label": "A.",
+        "text": "5 2 3 4 6",
+        "checked": false
+      },
+      {
+        "label": "B.",
+        "text": "5 6 4 2 3",
+        "checked": false
+      },
+      {
+        "label": "C.",
+        "text": "5 2 3 6 4",
+        "checked": false
+      },
+      {
+        "label": "D.",
+        "text": "2 3 4 5 6",
+        "checked": false
+      }
+    ],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0108",
+    "correct_answer": "C. 5 2 3 6 4",
+    "explanation": "拓扑排序满足有向边的前驱关系",
+    "correct_option_index": 2
+  },
+  {
+    "index": 1,
+    "quiz": "期末综合练习——综合题",
+    "quiz_index": 3,
+    "type": "综合题",
+    "question": "有一个长度为11的有序表（1，2，11，15，24，28，30，56，69，70，80），元素的下标依次为：1，2，3，……，11，按折半查找对该表进行查找。（1）画出对上述查找表进行折半查找所对应的判定树。（2）说出成功查找到元素56，需要依次经过与哪些元素的比较？（3）说出不成功查找元素72，需要进行元素比较的次数？",
+    "options": [],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0109",
+    "correct_answer": "（1）折半查找判定树：\n有序表有11个元素，判定树的根为中间元素mid=(1+11)/2=6，即a[6]=28。\n左子树：a[1..5]，根为a[3]=11\n右子树：a[7..11]，根为a[9]=69\n继续划分构建完整判定树。\n\n（2）查找56的过程：\n56与a[6]=28比较（56>28，向右）→ 与a[9]=69比较（56<69，向左）→ 与a[7]=56比较（找到！）\n共比较3次。\n\n（3）查找72（不成功）的过程：\n72与a[6]=28比较（72>28，向右）→ 与a[9]=69比较（72>69，向右）→ 与a[10]=70比较（72>70，向右）→ 与a[11]=80比较（72<80，向左）→ 查找区间为空，查找失败。\n共比较4次。",
+    "explanation": "",
+    "correct_option_index": null
+  },
+  {
+    "index": 2,
+    "quiz": "期末综合练习——综合题",
+    "quiz_index": 3,
+    "type": "综合题",
+    "question": "（1）以3，4，5，8，9，作为叶结点的权，构造一棵哈夫曼树。（2）给出相应权重值叶结点的哈夫曼编码。（2）n个叶结点的哈夫曼树，总共有多少个结点？",
+    "options": [],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0110",
+    "correct_answer": "（1）哈夫曼树构造过程：\n权值：3,4,5,8,9\n① 选最小两个3,4 → 合并为7\n② 选最小两个5,7 → 合并为12\n③ 选最小两个8,9 → 合并为17\n④ 选最小两个12,17 → 合并为29（根）\n\n（2）哈夫曼编码：\n3: 000, 4: 001, 5: 01, 8: 10, 9: 11\n（编码不唯一，但码长固定：3和4码长3，5码长2，8和9码长2）\n\n（3）n个叶结点的哈夫曼树共有2n-1个结点。",
+    "explanation": "",
+    "correct_option_index": null
+  },
+  {
+    "index": 3,
+    "quiz": "期末综合练习——综合题",
+    "quiz_index": 3,
+    "type": "综合题",
+    "question": "（1）一组记录的关键字序列为（57，90，67，50，51，56），利用堆排序（堆顶元素是最小元素）的方法建立初始堆（要求以完全二叉树描述 ）。（2）对关键字序列（56，51，71，54，46，106）利用快速排序，以第一个关键字为分割元素，给出经过一次划分后结果。（3）一组记录的关键字序列为（60，47，80，57，39，41，46，30），利用归并排序的方法，分别给出（1，1）归并、（2，2）归并、（4，4）归并的结果序列。",
+    "options": [],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0111",
+    "correct_answer": "（1）建立初始堆（小根堆）：\n序列(57,90,67,50,51,56)，从最后一个非叶结点开始调整：\n调整过程使每个子树满足堆性质，最终初始堆为：50,51,56,57,90,67\n\n（2）快速排序一次划分（以第一个关键字56为分割元素）：\n序列(56,51,71,54,46,106)\n划分结果：46,51,54,56,71,106\n\n（3）直接插入排序过程略，按升序逐个插入。",
+    "explanation": "",
+    "correct_option_index": null
+  },
+  {
+    "index": 4,
+    "quiz": "期末综合练习——综合题",
+    "quiz_index": 3,
+    "type": "综合题",
+    "question": "（1）设有数据集合{40，29，7，73，101，4，55，2，81，92，39}，依次取集合中各数据构造一棵二叉排序树。（2）在上述二叉排序树上进行查找，给出成功查找到元素92的查找路径，其中共经过了多少次元素间的的比较。（3）有一个长度为10的有序表，按折半查找对该表进行查找，给出在等概率情况下查找成功的平均比较次数为。",
+    "options": [],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0112",
+    "correct_answer": "（1）二叉排序树构造：\n依次插入40,29,7,73,101,4,55,2,81,92,39\n40为根，29<40放左，7<29放左，73>40放右，101>73放右，4<7放左，55>40且<73放73左，2<4放左，81>73且<101放101左，92>81放81右，39>29且<40放29右\n\n（2）查找92的路径：40→73→81→92，共比较4次。\n\n（3）长度10的有序表折半查找，ASL=(1×1+2×2+4×3+3×4)/10=3.1（等概率情况下）",
+    "explanation": "",
+    "correct_option_index": null
+  },
+  {
+    "index": 5,
+    "quiz": "期末综合练习——综合题",
+    "quiz_index": 3,
+    "type": "综合题",
+    "question": "（1）以2，3，4，7，8，9作为叶结点的权，构造一棵哈夫曼树。（2）给出相应权重值叶结点的哈夫曼编码。（3）一组记录的关键字序列为（47，80，57，39，41，46），利用堆排序的方法建立的初始堆（堆顶元素是最小元素，以树的形式给出）。",
+    "options": [],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0113",
+    "correct_answer": "（1）哈夫曼树构造：\n权值：2,3,4,7,8,9\n① 2,3→5\n② 4,5→9\n③ 7,8→15\n④ 9,9→18\n⑤ 15,18→33（根）\n\n（2）哈夫曼编码：\n2: 0000, 3: 0001, 4: 001, 7: 01, 8: 10, 9: 11（不唯一）\n\n（3）序列(47,80,57,39,41,46)建立小根堆：\n初始堆：39,41,46,80,47,57",
+    "explanation": "",
+    "correct_option_index": null
+  },
+  {
+    "index": 6,
+    "quiz": "期末综合练习——综合题",
+    "quiz_index": 3,
+    "type": "综合题",
+    "question": "（1）一组记录的关键字序列为（36，69，46，28，30，35），给出利用堆排序（堆顶元素是最小元素）的方法建立的初始堆（要求以完全二叉树描述 ）。（2）对关键字序列（36，69，46，28，30，74）采用快速排序，给出以第一个关键字为分割元素，经过一次划分后的结果。（3）设有数据集合{30，73，101，4，8，9，2，81}，依次取集合中各数据构造一棵二叉排序树。",
+    "options": [],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0114",
+    "correct_answer": "（1）序列(36,69,46,28,30,35)建立小根堆：\n从最后一个非叶结点调整，初始堆：28,30,35,69,36,46\n\n（2）快速排序一次划分（以36为分割元素）：\n序列(36,69,46,28,30,74)\n划分结果：28,30,36,46,69,74\n\n（3）数据集合{30,7,...}构造二叉排序树略。",
+    "explanation": "",
+    "correct_option_index": null
+  },
+  {
+    "index": 7,
+    "quiz": "期末综合练习——综合题",
+    "quiz_index": 3,
+    "type": "综合题",
+    "question": "（1）已知某二叉树的后序遍历序列是debca，中序遍历序列是dbeac，试画出该二叉树。（2）若上述二叉树的各个结点的字符分别代表不同的整数（其中没有相等的），并恰好使该树成为一棵二叉排序树，试给出a、b、c、d、e的大小关系。（3）给出该树的前序遍历序列。",
+    "options": [],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0115",
+    "correct_answer": "（1）由后序序列debca和中序序列dbeac还原二叉树：\n后序最后为a（根），中序中a左边dbe为左子树，c为右子树。\n后序debd对应左子树，d为左子树根，b为d的左孩子，e为d的右孩子。\n二叉树结构：\n    a\n   / \\\n  d   c\n / \\\nb   e\n\n（2）若使该树为二叉排序树，则：b<d<e<a<c\n\n（3）前序遍历序列：abdce",
+    "explanation": "",
+    "correct_option_index": null
+  },
+  {
+    "index": 8,
+    "quiz": "期末综合练习——综合题",
+    "quiz_index": 3,
+    "type": "综合题",
+    "question": "（1）一组记录的关键字序列为{45，40，65，43，35，95}，写出利用快速排序的方法，以第一个记录为基准得到的一趟划分的结果（要求给出一趟划分中每次扫描和交换的结果）。（2）对序列{45，40，65，43，35，95}利用直接插入排序，写出逐次插入过程（从第一个元素一直到第六个元素）。",
+    "options": [],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0116",
+    "correct_answer": "（1）快速排序一趟划分（基准45）：\n序列{45,40,65,43,35,95}\n从右扫描：35<45，交换→{35,40,65,43,45,95}\n从左扫描：65>45，交换→{35,40,45,43,65,95}\n从右扫描：43<45，交换→{35,40,43,45,65,95}\n一趟划分结果：35,40,43,45,65,95\n\n（2）直接插入排序过程：\n第1趟：45\n第2趟：40,45\n第3趟：40,45,65\n第4趟：40,43,45,65\n第5趟：35,40,43,45,65\n第6趟：35,40,43,45,65,95",
+    "explanation": "",
+    "correct_option_index": null
+  },
+  {
+    "index": 9,
+    "quiz": "期末综合练习——综合题",
+    "quiz_index": 3,
+    "type": "综合题",
+    "question": "（1）设head1和p1分别是不带头结点的单向链表A的头指针和尾指针，head2和p2分别是不带头结点的单向链表B的头指针和尾指针，若要把B链表接到A链表之后，得到一个以head1为头指针的单向循环链表，写出其中两个关键的赋值语句（不用完整程序，结点的链域为next）。（2）单向链表的链域为next，设指针p指向单向链表中的某个结点，指针s指向一个要插入链表的新结点，现要把s所指结点插入p所指结点之后，某学生采用以下语句：p->next=s; s->next=p->next;这样做正确吗？若正确则回答正确，若不正确则说明应如何改写。",
+    "options": [],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0117",
+    "correct_answer": "（1）将B链表接到A链表之后，成为单向循环链表：\np1->next = head2;  // A的尾接到B的头\np2->next = head1;  // B的尾接到A的头（形成循环）\n\n（2）删去a结点（单向链表，链域为next）：\n需要找到a的前驱结点q，然后：q->next = p->next; free(p);",
+    "explanation": "",
+    "correct_option_index": null
+  },
+  {
+    "index": 10,
+    "quiz": "期末综合练习——综合题",
+    "quiz_index": 3,
+    "type": "综合题",
+    "question": "（1）设根为第1层,对给定权值1，3，4，4，5，6，构造深度为5的哈夫曼树。提示：构造中当出现被选的结点值有多个相等时，可尝试不同组合，以得到要求的树的深度。（2）求树的带权路径长度。（3）用链接法存储上述哈夫曼树，结点中共有多少个指针域为空，说明理由？（4）给出对上述哈夫曼树中序遍历得到的的序列。（5）一棵哈夫曼树有n个非叶结点，构造该树共有多少个权重值？简述理由？",
+    "options": [],
+    "blank_count": 0,
+    "filled_answers": [],
+    "uid": "q0118",
+    "correct_answer": "（1）构造深度为5的哈夫曼树（权值1,3,4,4,5,6）：\n① 1,3→4\n② 4,4→8（选已有的4和新生成的4）\n③ 4,5→9\n④ 6,8→14\n⑤ 9,14→23（根）\n树的深度为5。\n\n（2）带权路径长度WPL：\nWPL = 1×4 + 3×4 + 4×3 + 4×3 + 5×2 + 6×2 = 4+12+12+12+10+12 = 62\n\n（3）用链接法存储，n个结点的二叉树有n+1个空指针域。\n该哈夫曼树有2×6-1=11个结点，空指针域=11+1=12个。\n\n（4）中序遍历序列略（需根据具体树结构确定）。",
+    "explanation": "",
+    "correct_option_index": null
+  },
+  {
+    "index": 1,
+    "quiz": "期末综合练习——程序填空题",
+    "quiz_index": 4,
+    "type": "其他",
+    "question": "以下是中序遍历二叉树的递归算法的程序，完成程序中空格部分（树结构中左、右指针域分别为left和right，数据域data为字符型，BT指向根结点）。void Inorder(struct BTreeNode *BT){if(BT!=NULL)回答;回答;Inorder(BT->right);}利用上述程序对下图进行遍历，结果是回答。",
+    "options": [],
+    "blank_count": 3,
+    "filled_answers": [],
+    "uid": "q0119",
+    "correct_answer": "空1: Inorder(BT->left);\n空2: printf(\"%c\", BT->data);\n（中序遍历：左子树→根→右子树）",
+    "explanation": "",
+    "correct_option_index": null
+  },
+  {
+    "index": 2,
+    "quiz": "期末综合练习——程序填空题",
+    "quiz_index": 4,
+    "type": "其他",
+    "question": "设线性表为（16，20，26，24），以不带头结点的单向链表存储，链表头指针为head，以下程序的功能是输出链表中各结点中的数据域data。struct node{int data;struct node *next;};typedef struct node NODE;#define NULL 0void main(){NODE *head,*p;p=head;    /*p为工作指针*/do{printf(\"%d\",回答);回答;}while(回答);}",
+    "options": [],
+    "blank_count": 3,
+    "filled_answers": [],
+    "uid": "q0120",
+    "correct_answer": "空1: p=head;\n空2: p=p->next;\n（遍历链表：从头指针开始，逐个输出data，p后移）",
+    "explanation": "",
+    "correct_option_index": null
+  },
+  {
+    "index": 3,
+    "quiz": "期末综合练习——程序填空题",
+    "quiz_index": 4,
+    "type": "其他",
+    "question": "以下冒泡法程序对存放在a[1]，a[2]，……，a[n]中的序列进行排序，完成程序中的空格部分，其中n是元素个数，要求按升序排列。void bsort (NODE a[ ],int n){NODE temp;int i,j,flag;for(j=1;回答;j++){flag=0;for(i=1;回答;i++)if(a[i].key>a[i+1].key){flag=1;temp=a[i];回答;回答;}if(flag==0)break;}}设有序列6，4，5，8，2，1，给出由该程序经过两趟冒泡后的结果序列回答。",
+    "options": [],
+    "blank_count": 5,
+    "filled_answers": [],
+    "uid": "q0121",
+    "correct_answer": "空1: j<n\n空2: i<n-j\n空3: a[i].key>a[i+1].key\n空4: flag=1\n（冒泡排序：外层j从1到n-1，内层i从1到n-j，比较相邻元素）",
+    "explanation": "",
+    "correct_option_index": null
+  },
+  {
+    "index": 4,
+    "quiz": "期末综合练习——程序填空题",
+    "quiz_index": 4,
+    "type": "其他",
+    "question": "以下函数为直接选择排序算法，对a[1]，a[2]，……，a[n]中的记录进行直接选择排序，完成程序中的空格：typedef struct{int key;……}NODE;void selsort(NODE a[ ],int n){int i,j,k;NODE temp;for(i=1;i<=回答;i++){k=i;for(j=i+1;j<=回答;j++)if(a[j].key<a[k].key)回答;if(i!=k){temp=a[i];回答;回答;}}}",
+    "options": [],
+    "blank_count": 5,
+    "filled_answers": [],
+    "uid": "q0122",
+    "correct_answer": "空1: n-1\n空2: k=j\n空3: a[i].key>a[j].key\n空4: a[i]=a[k]; a[k]=temp;\n（直接选择排序：n-1趟，每趟选最小，记录下标k，最后交换）",
+    "explanation": "",
+    "correct_option_index": null
+  },
+  {
+    "index": 5,
+    "quiz": "期末综合练习——程序填空题",
+    "quiz_index": 4,
+    "type": "其他",
+    "question": "设线性表为（1，3，7，5），以下程序用说明结构变量的方法建立单向链表，并输出链表中各结点中的数据。struct node{int data;struct node *next;}typedef struct node NODE;#define NULL 0void main(){NODE a,b,c,d,*head,*p;a.data=6;b.data=10;c.data=16;c.data=4;      /*d是尾结点*/head=回答;a.next=&b;b.next=&c;c.next=&d;回答;     /*以上结束建表过程*/p=head;     /*p为工作指针，准备输出链表*/do{printf(\"%d\",回答);回答;}while(p!=NULL);}画出按该程序建立的单向链表的示意图，说明程序运行结束后p的指向。回答",
+    "options": [],
+    "blank_count": 5,
+    "filled_answers": [],
+    "uid": "q0123",
+    "correct_answer": "空1: a.data=1\n空2: b.data=3\n空3: c.data=7\n空4: d.data=5\n空5: a.next=&b; b.next=&c; c.next=&d; d.next=NULL;\n空6: p=head; while(p!=NULL){printf(\"%d\",p->data); p=p->next;}",
+    "explanation": "",
+    "correct_option_index": null
+  },
+  {
+    "index": 6,
+    "quiz": "期末综合练习——程序填空题",
+    "quiz_index": 4,
+    "type": "其他",
+    "question": "以下函数在a[0]到a[n-1]中，用折半查找算法查找关键字等于k的记录，查找成功返回该记录的下标，失败时返回-1，完成程序中的空格：typedef struct{int key;……}NODE;int Binary_Search(NODE a[ ],int n,int k){int low,mid,high;low=0;high=n-1;while(回答){mid=(low+high)/2;if(a[mid].key==k)return回答;else if(回答)low=mid+1;else回答;}return -1;}设数组元素：a[0]=2；a[1]=5；a[2]=3；a[3]=4；a[4]=9；a[5]=6；a[6]=1；a[7]=10；按上述程序查找元素5，能否成功查到，说明理由回答。",
+    "options": [],
+    "blank_count": 5,
+    "filled_answers": [],
+    "uid": "q0124",
+    "correct_answer": "空1: low=0; high=n-1;\n空2: mid=(low+high)/2;\n空3: k<a[mid].key\n空4: low=mid+1;\n空5: return mid;\n空6: return -1;\n（折半查找：经典算法，比较中间元素，缩小范围）",
+    "explanation": "",
+    "correct_option_index": null
+  },
+  {
+    "index": 7,
+    "quiz": "期末综合练习——程序填空题",
+    "quiz_index": 4,
+    "type": "其他",
+    "question": "以下程序是后序遍历二叉树的递归算法的程序，完成程序中空格部分（树结构中左、右指针域分别为left和right，数据域data为字符型，BT指向根结点）。void Inorder(struct BTreeNode *BT){if(BT!=NULL){回答;Inorder(BT->right);回答;}}利用上述程序对下图进行遍历，结果是回答。",
+    "options": [],
+    "blank_count": 3,
+    "filled_answers": [],
+    "uid": "q0125",
+    "correct_answer": "空1: Inorder(BT->left);\n空2: printf(\"%c\", BT->data);\n（后序遍历：左子树→右子树→根。注意函数名虽为Inorder但实际是后序遍历）\n正确答案：\n空1: Postorder(BT->left);  或 Inorder(BT->left);\n空2: printf(\"%c\", BT->data);",
+    "explanation": "",
+    "correct_option_index": null
+  },
+  {
+    "index": 8,
+    "quiz": "期末综合练习——程序填空题",
+    "quiz_index": 4,
+    "type": "其他",
+    "question": "以下函数为链队列的入队操作，x为要入队的结点的数据域的值，front、rear分别是链队列的队头、队尾指针struct node{ElemType data;struct node *next;};struct node *front,*rear;void InQueue(ElemType x){struct node *p;p=(struct node*)回答;p->data=x;p->next=NULL;回答;rear=回答;}",
+    "options": [],
+    "blank_count": 3,
+    "filled_answers": [],
+    "uid": "q0126",
+    "correct_answer": "空1: s=(struct node*)malloc(sizeof(struct node));\n空2: s->data=x;\n空3: s->next=NULL;\n空4: rear->next=s;\n空5: rear=s;\n（链队列入队：创建新结点，赋值，链接到队尾，更新尾指针）",
+    "explanation": "",
+    "correct_option_index": null
+  },
+  {
+    "index": 9,
+    "quiz": "期末综合练习——程序填空题",
+    "quiz_index": 4,
+    "type": "其他",
+    "question": "设有一个头指针为head的不带头结点单向链表，p、q是指向链表中结点类型的指针变量，p指向链表中某结点a（设链表中没有结点的数据域与结点a的数据域相同），写出相关语句：（1）使该单向链表成为单向循环链表；（2）删去a结点q=p;x=p->data;while(q->next!=NULL)q=q->next;回答;q=p;p=p->next;while(p->data!=x){q=p;回答;}回答;",
+    "options": [],
+    "blank_count": 3,
+    "filled_answers": [],
+    "uid": "q0127",
+    "correct_answer": "（1）使单向链表成为单向循环链表：\np->next=head;  （或 q->next=head; 取决于具体实现）\n\n（2）删去a结点：\nwhile(q->next!=p)\n    q=q->next;\nq->next=p->next;\nfree(p);\n（先找到a的前驱结点q，然后绕过p，释放p）",
+    "explanation": "",
+    "correct_option_index": null
+  }
+];
+</script>
+
+<script>
+// 正确答案索引
+// uid -> {answer, explanation, option_index}
+// 答案与 quiz_answers.html 完全一致
+
+const ANSWER_INDEX = 
+{
+  "q0001": {
+    "answer": "10",
+    "explanation": "10行矩阵，97个零元素+3个非零元素=100个元素，100/10=10列",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0002": {
+    "answer": "图状",
+    "explanation": "多对多关系对应图状结构",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0003": {
+    "answer": "p->next",
+    "explanation": "删除q结点：将p的next指针指向q的next，即p->next = q->next",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0004": {
+    "answer": "n-j",
+    "explanation": "第j趟冒泡比较n-j次（每趟确定1个元素位置）",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0005": {
+    "answer": "元素值",
+    "explanation": "三元组=（行下标，列下标，元素值）",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0006": {
+    "answer": "二叉排序",
+    "explanation": "中序遍历二叉排序树得到有序序列",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0007": {
+    "answer": "后出",
+    "explanation": "队列特点：先进先出（后进后出）",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0008": {
+    "answer": "1，2，4，8，3，5，9",
+    "explanation": "第1趟选最小1与8交换→1,3,4,8,2,5,9；第2趟选最小2与3交换→1,2,4,8,3,5,9",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0009": {
+    "answer": "n-1",
+    "explanation": "n个元素冒泡排序最多n-1趟",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0010": {
+    "answer": "4",
+    "explanation": "广义表长度=顶层元素个数=（a,b）,d,e,（（i,j）,k）共4个",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0011": {
+    "answer": "有序",
+    "explanation": "中序遍历二叉排序树得到有序（递增）序列",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0012": {
+    "answer": "3",
+    "explanation": "深度=最大嵌套层数：（（i,j）,k）嵌套3层，深度=3",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0013": {
+    "answer": "6",
+    "explanation": "长度=顶层元素个数：c,a,（a,b）,d,e,（（i,j）,k）共6个",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0014": {
+    "answer": "5",
+    "explanation": "10×10=100个元素，100-95=5个非零元素，三元组表有5个元素",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0015": {
+    "answer": "3",
+    "explanation": "同Q12，深度=3",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0016": {
+    "answer": "3",
+    "explanation": "前6个排序后：16,22,49,50,73,97。插入65：97(1次)→73(2次)→50(3次)，65>50，共3次",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0017": {
+    "answer": "front == rear",
+    "explanation": "少用一个空间时，队空条件：front==rear",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0018": {
+    "answer": "9",
+    "explanation": "n个叶子结点的哈夫曼树有2n-1个结点，2×5-1=9",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0019": {
+    "answer": "2",
+    "explanation": "字符串\"E\"占2字节：'E'+'\\0'",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0020": {
+    "answer": "12",
+    "explanation": "前3层满：1+2+4=7，第4层5个，共7+5=12",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0021": {
+    "answer": "n+1",
+    "explanation": "n个非叶结点（度数全为2），叶子=n+1",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0022": {
+    "answer": "32",
+    "explanation": "删除第8个元素，移动40-8=32个",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0023": {
+    "answer": "3",
+    "explanation": "前6个排序后：16,22,39,55,73,97。插入65：97(1)→73(2)→55(3)，65>55，共3次",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0024": {
+    "answer": "7",
+    "explanation": "\"English\"有7个字符，遍历到'\\0'时n=7",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0025": {
+    "answer": "8",
+    "explanation": "\"AEIJING\"有7个字符+\\0=8字节",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0026": {
+    "answer": "后出",
+    "explanation": "栈特点：先进后出",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0027": {
+    "answer": "图状",
+    "explanation": "多对多关系=图状结构",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0028": {
+    "answer": "行下标、列下标和元素值",
+    "explanation": "三元组三项：行下标、列下标、元素值",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0029": {
+    "answer": "12",
+    "explanation": "8行，92零元素+4非零元素=96，96/8=12列",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0030": {
+    "answer": "4",
+    "explanation": "前5个排序后：2,9,19,35,77。插入10：77(1)→35(2)→19(3)→9(4)，10>9，共4次",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0031": {
+    "answer": "front == rear",
+    "explanation": "循环队列少用一个空间：队空条件front==rear",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0032": {
+    "answer": "a2（即\"bef\"）",
+    "explanation": "比较：beijing,bef,beifang,befi。bef最短且最小",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0033": {
+    "answer": "n-j",
+    "explanation": "同Q4，第j趟比较n-j次",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0034": {
+    "answer": "5",
+    "explanation": "10个元素第5趟比较10-5=5次",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0035": {
+    "answer": "12",
+    "explanation": "同Q20，1+2+4+5=12",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0036": {
+    "answer": "中序",
+    "explanation": "中序遍历二叉排序树得到有序序列",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0037": {
+    "answer": "二叉排序",
+    "explanation": "中序遍历二叉排序树得到有序序列",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0038": {
+    "answer": "4",
+    "explanation": "长度=顶层元素个数：c,（a,b,c）,（d,e,f）,（（i,j）,k）共4个",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0039": {
+    "answer": "1，2，5，9，4，6，10",
+    "explanation": "第1趟选最小1与9交换→1,4,5,9,2,6,10；第2趟选最小2与4交换→1,2,5,9,4,6,10",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0040": {
+    "answer": "3",
+    "explanation": "深度：（（i,j）,k）嵌套3层，深度=3",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0041": {
+    "answer": "4",
+    "explanation": "长度=4：（a,b）,d,e,（（i,j）,k）",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0042": {
+    "answer": "2，4，3，5，6，8",
+    "explanation": "升序一趟冒泡：4,2→2,4; 4,5→4,5; 5,3→3,5; 5,8→5,8; 8,6→6,8 → 2,4,3,5,6,8",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0043": {
+    "answer": "3",
+    "explanation": "同Q12，深度=3",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0044": {
+    "answer": "1，2，4，8，3，5，9",
+    "explanation": "同Q8：1,2,4,8,3,5,9",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0045": {
+    "answer": "顺序",
+    "explanation": "顺序存储需要连续存储空间",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0046": {
+    "answer": "顺序",
+    "explanation": "顺序存储支持随机访问",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0047": {
+    "answer": "有序",
+    "explanation": "关键字有序的顺序存储可用二分查找",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0048": {
+    "answer": "5，6，1，2，3，4，7，8",
+    "explanation": "(1,1)归并：相邻1个元素两两归并→(5,6)(1,2)(3,4)(7,8) → 5,6,1,2,3,4,7,8",
+    "option_index": null,
+    "quiz_index": 1
+  },
+  "q0049": {
+    "answer": "B. 都是操作受限的线性结构",
+    "explanation": "栈和队列都是操作受限的线性表（栈只允许一端操作，队列允许两端操作）",
+    "option_index": 1,
+    "quiz_index": 2
+  },
+  "q0050": {
+    "answer": "D. 数据元素间的关系的表示",
+    "explanation": "存储结构=数据元素的表示+数据元素间关系的表示",
+    "option_index": 3,
+    "quiz_index": 2
+  },
+  "q0051": {
+    "answer": "B. p->next=top; top=p;",
+    "explanation": "链栈入栈：新结点next指向当前栈顶，然后更新栈顶",
+    "option_index": 1,
+    "quiz_index": 2
+  },
+  "q0052": {
+    "answer": "B. 一对多",
+    "explanation": "树状结构是一对多的层次关系",
+    "option_index": 1,
+    "quiz_index": 2
+  },
+  "q0053": {
+    "answer": "D. p->next=head;",
+    "explanation": "尾结点的next指向头指针head即可成循环链表",
+    "option_index": 3,
+    "quiz_index": 2
+  },
+  "q0054": {
+    "answer": "C. 21",
+    "explanation": "插入第6个位置，移动26-6+1=21个元素",
+    "option_index": 2,
+    "quiz_index": 2
+  },
+  "q0055": {
+    "answer": "C. 可以有不同的存储结构",
+    "explanation": "一种逻辑结构可以映射到多种存储结构",
+    "option_index": 2,
+    "quiz_index": 2
+  },
+  "q0056": {
+    "answer": "D. p->next=head;",
+    "explanation": "去掉头结点后，尾结点需要指向新的头结点",
+    "option_index": 3,
+    "quiz_index": 2
+  },
+  "q0057": {
+    "answer": "B. 存储结构",
+    "explanation": "存储结构=把数据存入计算机并体现逻辑结构",
+    "option_index": 1,
+    "quiz_index": 2
+  },
+  "q0058": {
+    "answer": "A. 117，115，111，113",
+    "explanation": "全部入栈后117在顶，115次之。要输出111必须在113之前，但113在111上方，不可能",
+    "option_index": 0,
+    "quiz_index": 2
+  },
+  "q0059": {
+    "answer": "C. 多对多",
+    "explanation": "图状结构是多对多关系",
+    "option_index": 2,
+    "quiz_index": 2
+  },
+  "q0060": {
+    "answer": "B. 栈的特点是先进后出",
+    "explanation": "栈是先进后出（LIFO）",
+    "option_index": 1,
+    "quiz_index": 2
+  },
+  "q0061": {
+    "answer": "C. p->next=s;",
+    "explanation": "s->next=p->next; p->next=s; 标准后插操作",
+    "option_index": 2,
+    "quiz_index": 2
+  },
+  "q0062": {
+    "answer": "B. 17",
+    "explanation": "下三角行序存储：k=i*(i-1)/2+j=6*5/2+2=17",
+    "option_index": 1,
+    "quiz_index": 2
+  },
+  "q0063": {
+    "answer": "C. 18，16，12，14",
+    "explanation": "全部入栈后，18在顶16次之。要出12必须在14前，但14在12上方，不可能",
+    "option_index": 2,
+    "quiz_index": 2
+  },
+  "q0064": {
+    "answer": "A. p3",
+    "explanation": "比较第4位：D<F，p1和p3较大。p3比p1长且p1是前缀，所以p3最大",
+    "option_index": 0,
+    "quiz_index": 2
+  },
+  "q0065": {
+    "answer": "A. 38",
+    "explanation": "k=9*8/2+2=36+2=38",
+    "option_index": 0,
+    "quiz_index": 2
+  },
+  "q0066": {
+    "answer": "A. 字符串的结束符",
+    "explanation": "\"English\"占7+1=8字节，a[7]是'\\0'结束符",
+    "option_index": 0,
+    "quiz_index": 2
+  },
+  "q0067": {
+    "answer": "C. 24",
+    "explanation": "删除第8个元素，移动32-8=24个",
+    "option_index": 2,
+    "quiz_index": 2
+  },
+  "q0068": {
+    "answer": "D. Bcd",
+    "explanation": "主串中位置7-10: B,c,d → 不对。位置7,8,9,10: c,d,3,2 → 'cd32'？再看：D(0)A(1)B(2)c(3)d(4)a(5)b(6)c(7)d(8)3(9)2(10)1(11)A(12)B(13)C(14) → 'Bcd'在7,8,9不对，在... 实际\"Bcd\"在第7-9位",
+    "option_index": 3,
+    "quiz_index": 2
+  },
+  "q0069": {
+    "answer": "A. 2i+1",
+    "explanation": "二叉树右孩子编号=2i+1（根从0开始编号）",
+    "option_index": 0,
+    "quiz_index": 2
+  },
+  "q0070": {
+    "answer": "B. 2i",
+    "explanation": "左孩子编号=2i",
+    "option_index": 1,
+    "quiz_index": 2
+  },
+  "q0071": {
+    "answer": "D. 5",
+    "explanation": "⌊log₂16⌋+1=4+1=5层",
+    "option_index": 3,
+    "quiz_index": 2
+  },
+  "q0072": {
+    "answer": "B. aebcfd",
+    "explanation": "BFS按层遍历，此为常见图遍历答案",
+    "option_index": 1,
+    "quiz_index": 2
+  },
+  "q0073": {
+    "answer": "C. aebcfgd",
+    "explanation": "DFS深度优先，此为常见图遍历答案",
+    "option_index": 2,
+    "quiz_index": 2
+  },
+  "q0074": {
+    "answer": "D. 关键字有序的顺序",
+    "explanation": "折半查找要求顺序存储且关键字有序",
+    "option_index": 3,
+    "quiz_index": 2
+  },
+  "q0075": {
+    "answer": "A. \"cd32\"",
+    "explanation": "主串中'cd32'在位置7-10（c,d,3,2），是子串",
+    "option_index": 0,
+    "quiz_index": 2
+  },
+  "q0076": {
+    "answer": "D. 7",
+    "explanation": "前5层满=31，38-31=7个在最后一层",
+    "option_index": 3,
+    "quiz_index": 2
+  },
+  "q0077": {
+    "answer": "A. abcdfeg",
+    "explanation": "BFS按层遍历",
+    "option_index": 0,
+    "quiz_index": 2
+  },
+  "q0078": {
+    "answer": "D. 5 2 3 4 6",
+    "explanation": "拓扑排序需满足前驱关系",
+    "option_index": 3,
+    "quiz_index": 2
+  },
+  "q0079": {
+    "answer": "A. 线性表采用顺序存储便于插入和删除操作的实现",
+    "explanation": "顺序存储不便于插入删除（需移动元素）",
+    "option_index": 0,
+    "quiz_index": 2
+  },
+  "q0080": {
+    "answer": "B. p->next =head;",
+    "explanation": "删除第一个结点后，尾指针需指向新的头",
+    "option_index": 1,
+    "quiz_index": 2
+  },
+  "q0081": {
+    "answer": "B. 二叉树",
+    "explanation": "二叉树是非线性结构",
+    "option_index": 1,
+    "quiz_index": 2
+  },
+  "q0082": {
+    "answer": "B. 一种逻辑结构可以有不同的存储结构",
+    "explanation": "逻辑结构与存储结构独立，可以有多种存储方式",
+    "option_index": 1,
+    "quiz_index": 2
+  },
+  "q0083": {
+    "answer": "C. 11",
+    "explanation": "删除第7个元素，移动18-7=11个",
+    "option_index": 2,
+    "quiz_index": 2
+  },
+  "q0084": {
+    "answer": "C. 数据元素间的逻辑关系",
+    "explanation": "物理结构（存储结构）体现数据元素间的逻辑关系",
+    "option_index": 2,
+    "quiz_index": 2
+  },
+  "q0085": {
+    "answer": "A. 同时具备长度相等和对应字符相等两个条件",
+    "explanation": "字符串相等=长度相等+对应字符相等",
+    "option_index": 0,
+    "quiz_index": 2
+  },
+  "q0086": {
+    "answer": "C. 可以随机访问任一结点",
+    "explanation": "顺序表支持随机访问（O(1)访问任意元素）",
+    "option_index": 2,
+    "quiz_index": 2
+  },
+  "q0087": {
+    "answer": "A. 双向循环链表",
+    "explanation": "双向循环链表在尾部插入删除只需O(1)",
+    "option_index": 0,
+    "quiz_index": 2
+  },
+  "q0088": {
+    "answer": "D. 多对多",
+    "explanation": "图状结构是多对多关系",
+    "option_index": 3,
+    "quiz_index": 2
+  },
+  "q0089": {
+    "answer": "B. 19，13，15，20",
+    "explanation": "全部入栈后20在顶。要出13必须在15前，但15在13上方，不可能",
+    "option_index": 1,
+    "quiz_index": 2
+  },
+  "q0090": {
+    "answer": "D. 18，16，20，14",
+    "explanation": "全部入栈后18在顶。要出20必须在14前，但14在20上方，不可能",
+    "option_index": 3,
+    "quiz_index": 2
+  },
+  "q0091": {
+    "answer": "A. q->next=p->next；",
+    "explanation": "q指向A，p指向B(A的后继)。删除B：q->next=p->next",
+    "option_index": 0,
+    "quiz_index": 2
+  },
+  "q0092": {
+    "answer": "C. 14",
+    "explanation": "k=5*4/2+4=10+4=14",
+    "option_index": 2,
+    "quiz_index": 2
+  },
+  "q0093": {
+    "answer": "B. 只允许在端点处插入和删除元素",
+    "explanation": "栈和队列都只允许在端点处操作",
+    "option_index": 1,
+    "quiz_index": 2
+  },
+  "q0094": {
+    "answer": "C. 14",
+    "explanation": "删除第8个元素，移动22-8=14个",
+    "option_index": 2,
+    "quiz_index": 2
+  },
+  "q0095": {
+    "answer": "C. 需修改尾指针",
+    "explanation": "链队列入队只修改尾指针rear",
+    "option_index": 2,
+    "quiz_index": 2
+  },
+  "q0096": {
+    "answer": "C. 11",
+    "explanation": "右孩子=2×5+1=11",
+    "option_index": 2,
+    "quiz_index": 2
+  },
+  "q0097": {
+    "answer": "B. a1",
+    "explanation": "比较第3位：I>F，a1和a2较大。a2是a1的前缀，a1更大",
+    "option_index": 1,
+    "quiz_index": 2
+  },
+  "q0098": {
+    "answer": "B. 19",
+    "explanation": "前4层满=15，加第5层4个=19",
+    "option_index": 1,
+    "quiz_index": 2
+  },
+  "q0099": {
+    "answer": "C. 17",
+    "explanation": "k=6*5/2+2=17（同Q14）",
+    "option_index": 2,
+    "quiz_index": 2
+  },
+  "q0100": {
+    "answer": "A. abcdfge",
+    "explanation": "BFS按层遍历",
+    "option_index": 0,
+    "quiz_index": 2
+  },
+  "q0101": {
+    "answer": "C. 若二叉树中左子树上所有结点的值均小于根结点的值，右子树上所有结点的值均大于根结点的值，则该树为二叉排序树",
+    "explanation": "二叉排序树定义：左子树所有结点<根<右子树所有结点",
+    "option_index": 2,
+    "quiz_index": 2
+  },
+  "q0102": {
+    "answer": "A. \"21ABC\"",
+    "explanation": "'21ABC'在主串位置5-9",
+    "option_index": 0,
+    "quiz_index": 2
+  },
+  "q0103": {
+    "answer": "A. 2^(k-1)",
+    "explanation": "第k层最多2^(k-1)个结点",
+    "option_index": 0,
+    "quiz_index": 2
+  },
+  "q0104": {
+    "answer": "C. 字符n",
+    "explanation": "\"English\"的a[1]='n'（字符n）",
+    "option_index": 2,
+    "quiz_index": 2
+  },
+  "q0105": {
+    "answer": "A. 6，2，8，7，9，3，4",
+    "explanation": "DFS从6出发深度优先遍历",
+    "option_index": 0,
+    "quiz_index": 2
+  },
+  "q0106": {
+    "answer": "A. aedfcb",
+    "explanation": "DFS从a出发深度优先遍历",
+    "option_index": 0,
+    "quiz_index": 2
+  },
+  "q0107": {
+    "answer": "D. abcdfge",
+    "explanation": "BFS从a出发按层遍历",
+    "option_index": 3,
+    "quiz_index": 2
+  },
+  "q0108": {
+    "answer": "C. 5 2 3 6 4",
+    "explanation": "拓扑排序满足有向边的前驱关系",
+    "option_index": 2,
+    "quiz_index": 2
+  },
+  "q0109": {
+    "answer": "（1）折半查找判定树：\n有序表有11个元素，判定树的根为中间元素mid=(1+11)/2=6，即a[6]=28。\n左子树：a[1..5]，根为a[3]=11\n右子树：a[7..11]，根为a[9]=69\n继续划分构建完整判定树。\n\n（2）查找56的过程：\n56与a[6]=28比较（56>28，向右）→ 与a[9]=69比较（56<69，向左）→ 与a[7]=56比较（找到！）\n共比较3次。\n\n（3）查找72（不成功）的过程：\n72与a[6]=28比较（72>28，向右）→ 与a[9]=69比较（72>69，向右）→ 与a[10]=70比较（72>70，向右）→ 与a[11]=80比较（72<80，向左）→ 查找区间为空，查找失败。\n共比较4次。",
+    "explanation": "",
+    "option_index": null,
+    "quiz_index": 3
+  },
+  "q0110": {
+    "answer": "（1）哈夫曼树构造过程：\n权值：3,4,5,8,9\n① 选最小两个3,4 → 合并为7\n② 选最小两个5,7 → 合并为12\n③ 选最小两个8,9 → 合并为17\n④ 选最小两个12,17 → 合并为29（根）\n\n（2）哈夫曼编码：\n3: 000, 4: 001, 5: 01, 8: 10, 9: 11\n（编码不唯一，但码长固定：3和4码长3，5码长2，8和9码长2）\n\n（3）n个叶结点的哈夫曼树共有2n-1个结点。",
+    "explanation": "",
+    "option_index": null,
+    "quiz_index": 3
+  },
+  "q0111": {
+    "answer": "（1）建立初始堆（小根堆）：\n序列(57,90,67,50,51,56)，从最后一个非叶结点开始调整：\n调整过程使每个子树满足堆性质，最终初始堆为：50,51,56,57,90,67\n\n（2）快速排序一次划分（以第一个关键字56为分割元素）：\n序列(56,51,71,54,46,106)\n划分结果：46,51,54,56,71,106\n\n（3）直接插入排序过程略，按升序逐个插入。",
+    "explanation": "",
+    "option_index": null,
+    "quiz_index": 3
+  },
+  "q0112": {
+    "answer": "（1）二叉排序树构造：\n依次插入40,29,7,73,101,4,55,2,81,92,39\n40为根，29<40放左，7<29放左，73>40放右，101>73放右，4<7放左，55>40且<73放73左，2<4放左，81>73且<101放101左，92>81放81右，39>29且<40放29右\n\n（2）查找92的路径：40→73→81→92，共比较4次。\n\n（3）长度10的有序表折半查找，ASL=(1×1+2×2+4×3+3×4)/10=3.1（等概率情况下）",
+    "explanation": "",
+    "option_index": null,
+    "quiz_index": 3
+  },
+  "q0113": {
+    "answer": "（1）哈夫曼树构造：\n权值：2,3,4,7,8,9\n① 2,3→5\n② 4,5→9\n③ 7,8→15\n④ 9,9→18\n⑤ 15,18→33（根）\n\n（2）哈夫曼编码：\n2: 0000, 3: 0001, 4: 001, 7: 01, 8: 10, 9: 11（不唯一）\n\n（3）序列(47,80,57,39,41,46)建立小根堆：\n初始堆：39,41,46,80,47,57",
+    "explanation": "",
+    "option_index": null,
+    "quiz_index": 3
+  },
+  "q0114": {
+    "answer": "（1）序列(36,69,46,28,30,35)建立小根堆：\n从最后一个非叶结点调整，初始堆：28,30,35,69,36,46\n\n（2）快速排序一次划分（以36为分割元素）：\n序列(36,69,46,28,30,74)\n划分结果：28,30,36,46,69,74\n\n（3）数据集合{30,7,...}构造二叉排序树略。",
+    "explanation": "",
+    "option_index": null,
+    "quiz_index": 3
+  },
+  "q0115": {
+    "answer": "（1）由后序序列debca和中序序列dbeac还原二叉树：\n后序最后为a（根），中序中a左边dbe为左子树，c为右子树。\n后序debd对应左子树，d为左子树根，b为d的左孩子，e为d的右孩子。\n二叉树结构：\n    a\n   / \\\n  d   c\n / \\\nb   e\n\n（2）若使该树为二叉排序树，则：b<d<e<a<c\n\n（3）前序遍历序列：abdce",
+    "explanation": "",
+    "option_index": null,
+    "quiz_index": 3
+  },
+  "q0116": {
+    "answer": "（1）快速排序一趟划分（基准45）：\n序列{45,40,65,43,35,95}\n从右扫描：35<45，交换→{35,40,65,43,45,95}\n从左扫描：65>45，交换→{35,40,45,43,65,95}\n从右扫描：43<45，交换→{35,40,43,45,65,95}\n一趟划分结果：35,40,43,45,65,95\n\n（2）直接插入排序过程：\n第1趟：45\n第2趟：40,45\n第3趟：40,45,65\n第4趟：40,43,45,65\n第5趟：35,40,43,45,65\n第6趟：35,40,43,45,65,95",
+    "explanation": "",
+    "option_index": null,
+    "quiz_index": 3
+  },
+  "q0117": {
+    "answer": "（1）将B链表接到A链表之后，成为单向循环链表：\np1->next = head2;  // A的尾接到B的头\np2->next = head1;  // B的尾接到A的头（形成循环）\n\n（2）删去a结点（单向链表，链域为next）：\n需要找到a的前驱结点q，然后：q->next = p->next; free(p);",
+    "explanation": "",
+    "option_index": null,
+    "quiz_index": 3
+  },
+  "q0118": {
+    "answer": "（1）构造深度为5的哈夫曼树（权值1,3,4,4,5,6）：\n① 1,3→4\n② 4,4→8（选已有的4和新生成的4）\n③ 4,5→9\n④ 6,8→14\n⑤ 9,14→23（根）\n树的深度为5。\n\n（2）带权路径长度WPL：\nWPL = 1×4 + 3×4 + 4×3 + 4×3 + 5×2 + 6×2 = 4+12+12+12+10+12 = 62\n\n（3）用链接法存储，n个结点的二叉树有n+1个空指针域。\n该哈夫曼树有2×6-1=11个结点，空指针域=11+1=12个。\n\n（4）中序遍历序列略（需根据具体树结构确定）。",
+    "explanation": "",
+    "option_index": null,
+    "quiz_index": 3
+  },
+  "q0119": {
+    "answer": "空1: Inorder(BT->left);\n空2: printf(\"%c\", BT->data);\n（中序遍历：左子树→根→右子树）",
+    "explanation": "",
+    "option_index": null,
+    "quiz_index": 4
+  },
+  "q0120": {
+    "answer": "空1: p=head;\n空2: p=p->next;\n（遍历链表：从头指针开始，逐个输出data，p后移）",
+    "explanation": "",
+    "option_index": null,
+    "quiz_index": 4
+  },
+  "q0121": {
+    "answer": "空1: j<n\n空2: i<n-j\n空3: a[i].key>a[i+1].key\n空4: flag=1\n（冒泡排序：外层j从1到n-1，内层i从1到n-j，比较相邻元素）",
+    "explanation": "",
+    "option_index": null,
+    "quiz_index": 4
+  },
+  "q0122": {
+    "answer": "空1: n-1\n空2: k=j\n空3: a[i].key>a[j].key\n空4: a[i]=a[k]; a[k]=temp;\n（直接选择排序：n-1趟，每趟选最小，记录下标k，最后交换）",
+    "explanation": "",
+    "option_index": null,
+    "quiz_index": 4
+  },
+  "q0123": {
+    "answer": "空1: a.data=1\n空2: b.data=3\n空3: c.data=7\n空4: d.data=5\n空5: a.next=&b; b.next=&c; c.next=&d; d.next=NULL;\n空6: p=head; while(p!=NULL){printf(\"%d\",p->data); p=p->next;}",
+    "explanation": "",
+    "option_index": null,
+    "quiz_index": 4
+  },
+  "q0124": {
+    "answer": "空1: low=0; high=n-1;\n空2: mid=(low+high)/2;\n空3: k<a[mid].key\n空4: low=mid+1;\n空5: return mid;\n空6: return -1;\n（折半查找：经典算法，比较中间元素，缩小范围）",
+    "explanation": "",
+    "option_index": null,
+    "quiz_index": 4
+  },
+  "q0125": {
+    "answer": "空1: Inorder(BT->left);\n空2: printf(\"%c\", BT->data);\n（后序遍历：左子树→右子树→根。注意函数名虽为Inorder但实际是后序遍历）\n正确答案：\n空1: Postorder(BT->left);  或 Inorder(BT->left);\n空2: printf(\"%c\", BT->data);",
+    "explanation": "",
+    "option_index": null,
+    "quiz_index": 4
+  },
+  "q0126": {
+    "answer": "空1: s=(struct node*)malloc(sizeof(struct node));\n空2: s->data=x;\n空3: s->next=NULL;\n空4: rear->next=s;\n空5: rear=s;\n（链队列入队：创建新结点，赋值，链接到队尾，更新尾指针）",
+    "explanation": "",
+    "option_index": null,
+    "quiz_index": 4
+  },
+  "q0127": {
+    "answer": "（1）使单向链表成为单向循环链表：\np->next=head;  （或 q->next=head; 取决于具体实现）\n\n（2）删去a结点：\nwhile(q->next!=p)\n    q=q->next;\nq->next=p->next;\nfree(p);\n（先找到a的前驱结点q，然后绕过p，释放p）",
+    "explanation": "",
+    "option_index": null,
+    "quiz_index": 4
+  }
+};
+</script>
+
+<!-- ========== 操作系统数据 ========== -->
+<script>
+const OS_SC = [{"id": 1, "q": "在计算机系统中，控制和管理各种资源、有效地组织多道程序运行的系统软件称作（）。", "o": ["A. 文件系统", "B. 操作系统", "C. 网络管理系统", "D. 数据库管理系统"], "a": "B"}, {"id": 2, "q": "按照所起的作用和需要的运行环境，操作系统属于（）。", "o": ["A. 应用软件", "B. 用户软件", "C. 系统软件", "D. 支撑软件"], "a": "C"}, {"id": 3, "q": "操作系统的基本职能是（）。", "o": ["A. 提供功能强大的网络管理工具", "B. 提供用户界面，方便用户使用", "C. 提供方便的可视化编辑程序", "D. 控制和管理系统内各种资源，有效地组织多道程序的运行"], "a": "D"}, {"id": 4, "q": "为了使计算机系统中所有的用户都能得到及时的响应，该操作系统应该是（）。", "o": ["A. 多道批处理系统", "B. 实时系统", "C. 分时系统", "D. 网络系统"], "a": "C"}, {"id": 5, "q": "在实时系统中，一旦有处理请求和要求处理的数据时，CPU就应该立即处理该数据并将结果及时送回。下面属于实时系统的是（）。", "o": ["A. 办公自动化系统", "B. 计算机激光照排系统", "C. 航空订票系统", "D. 计算机辅助设计系统"], "a": "C"}, {"id": 6, "q": "实时操作系统追求的目标是（）。", "o": ["A. 快速响应", "B. 充分利用内存", "C. 高吞吐率", "D. 减少系统开销"], "a": "A"}, {"id": 7, "q": "操作系统内核与用户程序、应用程序之间的接口是（）。", "o": ["A. 系统调用", "B. 图形界面", "C. shell命令", "D. C语言函数"], "a": "A"}, {"id": 8, "q": "进程与程序之间有密切联系，但又是不同的概念。二者的一个本质区别是（）。", "o": ["A. 程序是动态概念，进程是静态概念", "B. 程序是静态概念，进程是动态概念", "C. 程序保存在文件中，进程存放在内存中", "D. 程序顺序执行，进程并发执行"], "a": "B"}, {"id": 9, "q": "在单CPU系统中，若干程序的并发执行是由（）实现的。", "o": ["A. 程序自身", "B. 进程", "C. 用户", "D. 编译程序"], "a": "B"}, {"id": 10, "q": "某进程由于需要从磁盘上读入数据而处于阻塞状态。当系统完成了所需的读盘操作后，此时该进程的状态将（）。", "o": ["A. 从运行变为就绪", "B. 从阻塞变为就绪", "C. 从阻塞变为运行", "D. 从就绪变为运行"], "a": "B"}, {"id": 11, "q": "进程从运行状态变为阻塞状态的原因是（）。", "o": ["A. 输入或输出事件完成", "B. 时间片到", "C. 输入或输出事件发生", "D. 某个进程被唤醒"], "a": "C"}, {"id": 12, "q": "如果信号量S的值是0，此时进程A执行P（S）操作，那么，进程A会（）。", "o": ["A. 继续运行", "B. 进入就绪态，让出CPU", "C. 进入阻塞态，让出CPU", "D. 继续运行，并唤醒S队列头上的等待进程"], "a": "C"}, {"id": 13, "q": "操作系统中利用信号量和P、V操作，（）。", "o": ["A. 只能实现进程的互斥", "B. 只能实现进程的同步", "C. 可完成进程调度", "D. 可实现进程的互斥和同步"], "a": "D"}, {"id": 14, "q": "系统出现死锁的原因是（）。", "o": ["A. 计算机系统发生了重大故障", "B. 有多个封锁的进程同时存在", "C. 资源数大大少于进程数，或进程同时申请的资源数大大超过资源总数", "D. 若干进程因竞争资源而无休止地循环等待，而且都不释放已占有的资源"], "a": "D"}, {"id": 15, "q": "作业调度的关键在于（）。", "o": ["A. 选择恰当的进程调度程序", "B. 有一个较好的操作环境", "C. 用户作业准备充分", "D. 选择恰当的作业调度算法"], "a": "D"}, {"id": 16, "q": "作业调度选择一个作业装入主存后，该作业能否占用处理器必须由（）来决定。", "o": ["A. 设备管理", "B. 进程调度", "C. 作业控制", "D. 驱动调度"], "a": "B"}, {"id": 17, "q": "进程调度根据一定的调度算法，从（）队列中挑选出合适的进程运行。", "o": ["A. 阻塞", "B. 等待", "C. 运行", "D. 就绪"], "a": "D"}, {"id": 18, "q": "设某作业进入输入井的时间为S，开始运行的时间为R，得到计算结果的时间为E，则该作业的周转时间T为（）。", "o": ["A. T=(S+R)+E", "B. T=E-(S+R)", "C. T=E-S", "D. T=E-R"], "a": "C"}, {"id": 19, "q": "现有3个作业同时到达，每个作业的计算时间都是1小时，它们在一台CPU上按单道方式运行，则平均周转时间为（）。", "o": ["A. 1小时", "B. 2小时", "C. 3小时", "D. 6小时"], "a": "B"}, {"id": 20, "q": "按照作业到达的先后次序调度作业，排队等待时间最长的作业被优先调度，这是指（）调度算法。", "o": ["A. 先来先服务法", "B. 短作业优先法", "C. 时间片轮转法", "D. 优先级法"], "a": "A"}, {"id": 21, "q": "当硬件中断装置发现有事件发生，就会中断正在占用CPU的程序执行，让操作系统的（）占用CPU。", "o": ["A. 中断处理程序", "B. 系统调用程序", "C. 作业管理程序", "D. 文件管理程序"], "a": "A"}, {"id": 22, "q": "虚拟存储器的容量是由计算机的地址结构决定的，若CPU有32位地址，则它的虚拟地址空间为（）。", "o": ["A. 4G", "B. 2G", "C. 640K", "D. 100K"], "a": "A"}, {"id": 23, "q": "把逻辑地址转变为内存物理地址的过程称作（）。", "o": ["A. 编译", "B. 链接", "C. 重定位", "D. 运行"], "a": "C"}, {"id": 24, "q": "在分时系统中，可将进程不需要或暂时不需要的部分移到外存，让出内存空间以调入其他所需数据，这种技术称为（）。", "o": ["A. 覆盖技术", "B. 物理扩充", "C. 虚拟技术", "D. 对换技术"], "a": "D"}, {"id": 25, "q": "在存储管理中，为实现地址映射，硬件应提供两个寄存器，一个是基址寄存器。另一个是（）。", "o": ["A. 通用寄存器", "B. 程序状态字寄存器", "C. 限长寄存器", "D. 控制寄存器"], "a": "C"}, {"id": 26, "q": "在分页存储管理系统中，从页号到物理块号的地址映射是通过（）实现的。", "o": ["A. 文件分配表", "B. 分区表", "C. 页表", "D. 段表"], "a": "C"}, {"id": 27, "q": "存储管理中，页面抖动是指（）。", "o": ["A. 使用机器时，屏幕闪烁的现象", "B. 由于主存分配不当，偶然造成主存不够的现象", "C. 系统盘有问题，致使系统不稳定的现象", "D. 被调出的页面又立刻被调入所形成的频繁调入调出现象"], "a": "D"}, {"id": 28, "q": "操作系统是通过（）来对文件进行编辑、修改、维护和检索的。", "o": ["A. 文件属性", "B. 数据逻辑地址", "C. 数据物理地址", "D. 按名存取"], "a": "D"}, {"id": 29, "q": "操作系统实现'按名存取'的关键在于解决（）。", "o": ["A. 文件逻辑地址到文件具体的物理地址的转换", "B. 文件名称到文件逻辑地址的转换", "C. 文件逻辑地址到文件名称的转换", "D. 文件名称与文件具体的物理地址的转换"], "a": "D"}, {"id": 30, "q": "在UNIX/Linux系统中，用户程序经过编译之后得到的可执行文件属于（）。", "o": ["A. 设备文件", "B. 目录文件", "C. 普通文件", "D. 特别文件"], "a": "C"}, {"id": 31, "q": "在以下的文件物理存储组织形式中，（）常用于存放大型的系统文件。", "o": ["A. 串连文件", "B. 连续文件", "C. 索引文件", "D. 多重索引文件"], "a": "B"}, {"id": 32, "q": "由一串字符序列组成，文件内的信息不再划分可独立的单位，这是指（）。", "o": ["A. 顺序文件", "B. 记录式文件", "C. 流式文件", "D. 链接文件"], "a": "C"}, {"id": 33, "q": "如果文件系统中有两个文件重名，不应采用（）结构。", "o": ["A. 非循环图目录", "B. 树形目录", "C. 二级目录", "D. 单级目录"], "a": "D"}, {"id": 34, "q": "树形目录结构的主文件目录称为（）。", "o": ["A. 根目录", "B. 父目录", "C. 子目录", "D. 用户文件目录"], "a": "A"}, {"id": 35, "q": "在UNIX/Linux系统中，目录结构采用（）。", "o": ["A. 单级目录", "B. 二级目录", "C. 单纯树形目录", "D. 带链接的树形目录"], "a": "D"}, {"id": 36, "q": "当前目录是/usr/meng，其下属文件prog/file.c的绝对路径名是（）。", "o": ["A. /usr/meng/file.c", "B. /usr/file.c", "C. /usr/meng/prog/file.c", "D. /prog/file.c"], "a": "C"}, {"id": 37, "q": "为防止用户共享文件时破坏文件，往往采用（）方式。", "o": ["A. 设置口令", "B. 加密", "C. 定期备份", "D. 规定存取权限"], "a": "D"}, {"id": 38, "q": "用ls命令以长格式列目录信息时，若某一文件的特征在文件列表中按如下顺序显示在屏幕上：drwxrw-r-- 2 user gk 3564 Oct 28 10:30 /user/asD.h，则同组用户的访问权限是（）。", "o": ["A. 读和写", "B. 读和执行", "C. 写和执行", "D. 读、写、执行"], "a": "A"}, {"id": 39, "q": "设备独立性是指（）。", "o": ["A. 能独立实现设备共享的一种特性", "B. 设备具有独立执行I/O功能的一种特性", "C. 设备驱动程序独立于具体使用的物理设备的一种特性", "D. 用户程序使用的设备与实际使用哪台设备无关的一种特性"], "a": "D"}, {"id": 40, "q": "在操作系统中，通道是一种（）。", "o": ["A. I/O端口", "B. 数据通道", "C. 软件工具", "D. I/O专用处理机"], "a": "D"}, {"id": 41, "q": "引入缓冲技术的主要目的是（）。", "o": ["A. 改善用户编程环境", "B. 提高CPU的处理速度", "C. 降低计算机的硬件成本", "D. 提高CPU与设备之间的并行程度"], "a": "D"}, {"id": 42, "q": "下列设备中，不属于独占设备的是（）。", "o": ["A. 打印机", "B. 磁带", "C. 终端", "D. 磁盘"], "a": "D"}, {"id": 43, "q": "通过硬件和软件的功能扩充，把原来独占的设备改造成为能为若干用户共享的设备，这种设备称为（）。", "o": ["A. 存储设备", "B. 块设备", "C. 虚拟设备", "D. 共享设备"], "a": "C"}, {"id": 44, "q": "采用假脱机外围设备操作技术（SPOOLing）的目的是（）。", "o": ["A. 减轻用户编程负担", "B. 提高主机效率", "C. 提高程序的运行速度", "D. 提高独占设备的利用率"], "a": "D"}, {"id": 45, "q": "SPOOLing技术可以实现设备的（）分配。", "o": ["A. 独占", "B. 共享", "C. 虚拟", "D. 物理"], "a": "C"}, {"id": 46, "q": "设备的打开、关闭、读、写等操作是由（）完成的。", "o": ["A. 用户程序", "B. 设备驱动程序", "C. 编译程序", "D. 设备分配程序"], "a": "B"}, {"id": 47, "q": "下列关于Linux系统设备管理的描述中，不正确的是（）。", "o": ["A. Linux系统将存储设备称为字符设备", "B. Linux系统利用设备文件方式统一管理硬件设备", "C. Linux系统特殊文件的I节点中包含主、次设备号", "D. Linux系统中使用了多重缓冲技术"], "a": "A"}, {"id": 48, "q": "一个含有6个盘片的双面硬盘，盘片每面有100条磁道，则该硬盘的柱面数为（）。", "o": ["A. 1200", "B. 250", "C. 100", "D. 12"], "a": "C"}, {"id": 49, "q": "嵌入式操作系统的最大特点是（）。", "o": ["A. 分布性", "B. 可定制性", "C. 实时性", "D. 非实时性"], "a": "B"}, {"id": 50, "q": "下面4种多机系统中，节点彼此耦合最紧密的是（）。", "o": ["A. 分布式系统", "B. 网络系统", "C. 多计算机系统", "D. 多处理器系统"], "a": "D"}, {"id": 51, "q": "分布式操作系统与网络操作系统本质上的不同在于（）。", "o": ["A. 实现各台计算机之间的通信", "B. 共享网络中的资源", "C. 系统中若干台计算机相互协作完成同一任务", "D. 满足较大规模的应用"], "a": "C"}];
+const OS_TF = [{"id": 1, "q": "操作系统是整个计算机系统的控制管理中心，它对其它软件具有支配权利。因而，操作系统建立在其它软件之上。（）", "a": "×"}, {"id": 2, "q": "操作系统是系统软件中的一种，在进行系统安装时可以先安装其它软件，然后再装操作系统。（）", "a": "×"}, {"id": 3, "q": "操作系统的基本特征是并发、共享、异步性和抽象性，其中并发指的是多道程序并行。（）", "a": "×"}, {"id": 4, "q": "虽然分时系统也要求系统可靠，但实时系统对可靠性的要求更高。（）", "a": "√"}, {"id": 5, "q": "在UNIX/Linux系统上，系统调用以C函数的形式出现。（）", "a": "√"}, {"id": 6, "q": "操作系统核心提供了大量的服务，其最高层是系统调用，它允许正在运行的程序直接得到操作系统的服务。（）", "a": "√"}, {"id": 7, "q": "程序在运行时需要很多系统资源，如内存、文件、设备等，因此操作系统以程序为单位分配系统资源。（）", "a": "×"}, {"id": 8, "q": "进程之间的互斥主要源于进程之间的资源竞争，从而实现多个相关进程在执行次序上的协调。（）", "a": "×"}, {"id": 9, "q": "信号量机制是一种有效的实现进程同步与互斥的工具。信号量只能由P、V操作来改变。（）", "a": "√"}, {"id": 10, "q": "只要产生死锁的必要条件中有一个不具备，系统就不会出现死锁。（）", "a": "√"}, {"id": 11, "q": "处理机调度可分为三级：高级、中级和低级。在所有的系统中，都必须具备这三级调度。（）", "a": "×"}, {"id": 12, "q": "确定作业调度算法时应该使主要系统资源均衡使用，使I/O繁忙型作业和CPU繁忙型作业搭配运行。（）", "a": "√"}, {"id": 13, "q": "通常，为了提高效率，赋予需要大量计算的作业较高优先级，赋予需要大量输入/输出的作业较低的优先级。（）", "a": "×"}, {"id": 14, "q": "中断处理一般分为中断响应和中断处理两个步骤，前者由软件实施，后者由硬件实施。（）", "a": "×"}, {"id": 15, "q": "在现代操作系统中，不允许用户干预内存的分配。（）", "a": "√"}, {"id": 16, "q": "动态重定位是在程序装入期间，每次访问内存之前进行重定位。（）", "a": "√"}, {"id": 17, "q": "采用动态重定位技术的系统，目标程序可以不经任何改动，直接装入物理内存。（）", "a": "√"}, {"id": 18, "q": "可重定位分区存储管理可以对作业分配不连续的内存单元。（）", "a": "×"}, {"id": 19, "q": "虚拟存储器是利用操作系统产生的一个假想的特大存储器，是逻辑上扩充了内存容量，而物理内存的容量并未增加。（）", "a": "√"}, {"id": 20, "q": "在虚拟存储系统中，操作系统为用户提供了巨大的存储空间。因此，用户地址空间的大小可以不受任何限制。（）", "a": "×"}, {"id": 21, "q": "页式存储管理系统不利于页面的共享和保护。（）", "a": "√"}, {"id": 22, "q": "Linux文件包括普通文件、目录文件和用户文件三大类。（）", "a": "×"}, {"id": 23, "q": "顺序文件适合于建立在顺序存储设备上，而不适合建立在磁盘上。（）", "a": "×"}, {"id": 24, "q": "可顺序存取的文件不一定能随机存取；但可随机存取的文件都可以顺序存取。（）", "a": "√"}, {"id": 25, "q": "一般的文件系统都是基于磁盘设备的，而磁带设备可以作为转储设备使用，以提高系统的可靠性。（）", "a": "√"}, {"id": 26, "q": "采用了二级目录结构后，可以允许不同用户在为各自的文件命名时，不必考虑重名问题，即使取了相同的名字也不会出错。（）", "a": "√"}, {"id": 27, "q": "在采用树形目录结构的文件系统中，检索文件必须从根目录开始。（）", "a": "×"}, {"id": 28, "q": "计算机系统为每一台设备确定的一个用以标识它的编号，被称为设备的绝对号。（）", "a": "√"}, {"id": 29, "q": "只有引入通道后，CPU计算与I/O操作才能并行执行。（）", "a": "×"}, {"id": 30, "q": "共享设备是指允许多个作业在同一时刻使用的设备。（）", "a": "×"}, {"id": 31, "q": "利用SPOOLing技术可以提高设备的利用率，使得打印机之类的独占设备成为可共享的、快速I/O设备。（）", "a": "×"}, {"id": 32, "q": "SPOOLing系统实现设备管理的虚拟技术，即：将独占设备改造为共享设备。它由专门负责I/O的常驻内存的进程以及输入、输出井组成。（）", "a": "√"}, {"id": 33, "q": "磁盘上同一柱面上存储的信息是连续的。（）", "a": "√"}];
+const OS_MT = [{"id": 1, "left": ["分时系统", "实时系统", "网络系统", "分布式系统", "嵌入式系统"], "right": ["实现并发程序对CPU时间的共享", "响应快用户请求立即得到处理", "提供网络通信资源共享和保护等服务", "对分布在各个节点上的资源统一管理", "具有可定制性与应用环境密切相关"], "a": ["B", "E", "C", "A", "D"]}, {"id": 2, "left": ["进程的动态性", "进程的并发性", "进程的调度性", "进程的异步性", "进程的结构性"], "right": ["体现进程有生有亡的性质", "多个进程在一段时间内都得到运行的性质", "调度程序根据策略调度合适的进程", "各个进程向前推进的速度不可预知的特性", "进程由程序段数据段和控制结构等组成"], "a": ["D", "A", "C", "E", "B"]}, {"id": 3, "left": ["线程标识符", "调度状态信息", "核心栈指针", "用户栈指针", "私有存储区"], "right": ["在线程中是唯一的", "描述CPU工作的一组寄存器", "指向线程在核心态运行时使用的栈", "指向线程在用户态运行时使用的栈", "用于存放现场保护信息等"], "a": ["D", "E", "B", "A", "C"]}, {"id": 4, "left": ["CPU利用率", "吞吐量", "周转时间", "就绪等待时间", "响应时间"], "right": ["一般为40%到90%", "单位时间内CPU完成作业的数量", "从作业提交到作业完成的时间间隔", "每个作业在就绪队列中的等待时间", "从提交第一个请求到产生第一个响应所用的时间"], "a": ["B", "E", "A", "C", "D"]}, {"id": 5, "left": ["机器故障中断", "IO中断", "外部中断", "程序性中断", "访管中断"], "right": ["硬件在执行过程中出现的故障", "来自通道或外部设备的中断", "来自计算机系统外部装置的中断", "因错误地使用指令或数据而引起的中断", "使CPU状态从用户态转入管理态"], "a": ["B", "A", "E", "C", "D"]}, {"id": 6, "left": ["请求分页", "虚拟存储器", "缺页中断", "重定位", "对换技术"], "right": ["在单纯分页技术基础上使用虚拟存储器", "操作系统提供的比内存空间大得多的地址空间", "CPU要访问的页面不在内存引发的中断", "把逻辑地址转变为内存的物理地址", "利用外存来解决内存不足的问题"], "a": ["B", "C", "A", "E", "D"]}, {"id": 7, "left": ["先进先出法", "最佳置换法", "最近最少使用置换法", "最近未使用置换法", "页面走向"], "right": ["总是淘汰在内存中停留时间最长的一页", "总是淘汰在将来不被使用的页面", "总是淘汰在过去访问时间最久的页面", "总是淘汰在最近一段时间内未被访问的页面", "即存储访问序列"], "a": ["E", "B", "D", "A", "C"]}, {"id": 8, "left": ["特殊文件", "普通文件", "可执行文件", "目录文件", "临时文件"], "right": ["特指各种外部设备", "由表示程序数据或文本的字符串构成的文件", "经过编译链接之后形成的文件", "由下属文件的目录项构成的文件", "用户工作过程中产生的中间文件"], "a": ["B", "A", "E", "C", "D"]}, {"id": 9, "left": ["完全备份", "增量备份", "定期备份", "不定期备份", "文件的恢复"], "right": ["是一种全面的数据备份", "仅仅备份时间段内修改过的数据", "按照预先安排的备份时间表执行备份", "进行完整的无规律的备份", "利用文件备份恢复原先保存的文件系统"], "a": ["B", "E", "C", "A", "D"]}, {"id": 10, "left": ["存储设备", "IO设备", "独占设备", "共享设备", "虚拟设备"], "right": ["也称为块设备", "也称为字符设备", "只允许由一个进程使用的设备", "可由多个进程同时共用的设备", "利用某种技术把独占设备改造成共享设备"], "a": ["D", "A", "B", "E", "C"]}, {"id": 11, "left": ["寻道时间", "柱面", "扇区", "磁道", "旋转延迟时间"], "right": ["把磁头移到相应的磁道或柱面上的时间", "指硬盘的多个盘片上的同一磁道", "磁道上的扇形等分段", "磁盘存储面上的存储介质同心圆环", "磁头到达磁道后等待所需要的扇区转到的时间"], "a": ["D", "A", "E", "B", "C"]}, {"id": 12, "left": ["多处理器系统", "多计算机系统", "网络系统", "分布式系统", "云计算系统"], "right": ["多个CPU放在一个机箱内", "整个系统放在同一房间内又称为集群计算机系统", "各节点有独立的操作系统通过网络连接", "各节点有统一的操作系统通过网络连接", "通过互联网提供分布式计算能力的资源服务"], "a": ["C", "D", "E", "B", "A"]}];
+</script>
+
+<!-- ========== 操作系统解析 ========== -->
+<script>
+const OS_EXP = {
+  // === 单选题解析 ===
+  "sc_1": "操作系统是最核心的系统软件，负责控制和管理计算机系统的各种资源（CPU、内存、I/O设备等），并组织多道程序的运行。",
+  "sc_2": "操作系统按作用和运行环境分类，属于系统软件。系统软件是支撑应用软件运行的基础软件，包括操作系统、编译程序、数据库管理系统等。",
+  "sc_3": "操作系统的基本职能是控制和管理系统内各种资源，有效地组织多道程序的运行。这是操作系统区别于其他软件的根本特征。",
+  "sc_4": "分时系统的核心特征是时间片轮转，使多个用户都能得到及时响应，每个用户都感觉独占了计算机。",
+  "sc_5": "航空订票系统是典型的实时系统，要求在规定时间内对外部事件做出响应，延迟会导致严重后果。",
+  "sc_6": "实时操作系统追求的目标是快速响应，确保在截止时间内完成任务，这是实时系统与分时系统的根本区别。",
+  "sc_7": "系统调用是操作系统内核提供给用户程序和应用程序的接口，是用户态进入核心态的唯一正规途径。",
+  "sc_8": "程序是静态的（存放在磁盘上的代码和数据），进程是动态的（程序在内存中的执行过程），这是二者最本质的区别。",
+  "sc_9": "在单CPU系统中，多道程序的并发执行是通过进程的创建和切换来实现的。进程是并发执行的基本单位。",
+  "sc_10": "进程因等待I/O操作（如读盘）而进入阻塞状态，当I/O操作完成后，等待的事件发生，进程从阻塞态变为就绪态，等待被调度执行。",
+  "sc_11": "进程从运行态变为阻塞态是因为发生了I/O请求等事件（如等待输入输出），进程主动放弃CPU等待事件完成。",
+  "sc_12": "信号量S=0表示资源已用完，执行P操作（申请资源）会使S变为-1，进程A进入阻塞态，让出CPU等待资源释放。",
+  "sc_13": "信号量和P、V操作既可以实现进程的互斥（临界区保护），也可以实现进程的同步（先后顺序协调），是经典的进程通信工具。",
+  "sc_14": "死锁的根本原因是若干进程因竞争资源而无休止地循环等待，且都不释放已占有的资源，形成僵局。",
+  "sc_15": "作业调度的关键在于选择恰当的作业调度算法，不同的调度算法会直接影响系统的吞吐量、周转时间等性能指标。",
+  "sc_16": "作业调度选择作业装入主存后，能否占用处理器由进程调度来决定。作业调度只负责从后备队列选择作业调入内存。",
+  "sc_17": "进程调度应从就绪队列中选择一个合适的进程投入运行，调度策略包括时间片轮转、优先级调度、多级反馈队列等。",
+  "sc_18": "周转时间T = 完成时间 - 提交时间。题中E为结束时间，S为提交时间，R为开始运行时间，因此T = E - S。",
+  "sc_19": "3个作业同时到达，各需1小时CPU时间，采用串行方式执行。平均周转时间 = (1+2+3)/3 = 2小时。",
+  "sc_20": "短作业优先（SJF）调度算法选择估计运行时间最短的作业优先调度，可以获得最短的平均等待时间。",
+  "sc_21": "硬中断（硬件中断）是由外部设备发出的中断信号，会抢占CPU的当前执行，操作系统不能忽略硬中断。",
+  "sc_22": "32位地址空间的直接寻址范围为2^32 = 4GB，这是由CPU的地址总线宽度决定的。",
+  "sc_23": "将逻辑地址转换为内存物理地址的过程称为重定位（地址映射），是实现存储保护和管理的基础。",
+  "sc_24": "分时系统中采用“按时间片轮转”的策略使各终端用户都能得到及时响应，不会因某个用户长时间占用CPU而使其他用户等待。",
+  "sc_25": "在存储管理中，硬件应提供基地址寄存器（或基址寄存器）和限长寄存器，用于实现地址映射和存储保护。",
+  "sc_26": "在分页存储管理系统中，页号到物理块号（帧号）的地址映射是通过页表来实现的，页表记录了逻辑页到物理块的对应关系。",
+  "sc_27": "存储管理中，页面大小是由硬件（体系结构）决定的，通常是2的幂次方，如4KB。页大小影响内碎片和页表长度。",
+  "sc_28": "操作系统中通常将磁盘上的文件按目录进行编辑、修改、维护和查找。目录结构管理是文件系统的重要功能。",
+  "sc_29": "操作系统实现“按名存取”的关键在于将文件名映射到磁盘上的物理位置（物理地址），用户只需提供文件名即可访问文件。",
+  "sc_30": "在UNIX/Linux系统中，源程序经过编译之后得到的可执行文件格式是a.out（汇编器输出），这是经典的可执行文件格式。",
+  "sc_31": "索引顺序文件适合存放在大型计算机系统中，它结合了顺序文件和索引文件的优点，既支持顺序存取也支持随机存取。",
+  "sc_32": "一个文件由两部分构成：文件目录项信息（FCB）和文件体（数据）。文件体是用户数据的实际存放位置。",
+  "sc_33": "多级文件目录结构采用树形结构，便于文件按类别组织和管理，是现代操作系统普遍采用的目录结构。",
+  "sc_34": "多级目录结构将文件目录组织为树形结构，根目录为最顶层节点，每个目录可以包含子目录和文件。",
+  "sc_35": "在UNIX/Linux系统中，目录结构采用树形（层次）结构，只有一个根目录/，所有文件和目录都从根开始。",
+  "sc_36": "当前目录为/usr/meng，文件prog/file.c是相对路径，绝对路径为/usr/meng/prog/file.c，即在当前目录前加根路径。",
+  "sc_37": "为了防止用户共享文件时破坏文件，常采用存取权限控制机制，如rwx权限，限制不同用户对文件的读、写、执行操作。",
+  "sc_38": "ls命令以长格式列出目录信息时，文件类型和权限字段（如drwxrw-r--）中，d表示目录文件，后面9位分3组表示文件主、同组、其他用户的权限。",
+  "sc_39": "设备独立性是指用户程序中使用的设备名与实际物理设备无关，由操作系统进行映射，提高设备分配的灵活性和可移植性。",
+  "sc_40": "在操作系统中，通道是一种特殊的处理机，专门负责I/O操作，使CPU与I/O设备并行工作，提高系统效率。",
+  "sc_41": "引入缓冲区（缓冲池）的主要目的是缓解CPU与I/O设备之间速度不匹配的矛盾，提高CPU利用率和系统吞吐量。",
+  "sc_42": "独占设备是指在任一时刻只能由一个进程使用的设备，如打印机、磁带机等。多个进程同时使用会导致混乱。",
+  "sc_43": "通过硬件和软件的配合，将原独占设备改造为多个用户共享的设备，这种设备称为虚拟设备，如SPOOLing技术实现的共享打印机。",
+  "sc_44": "采用缓冲池或外围设备同时联机操作（SPOOLing）技术的目的是提高I/O速度，将独占设备模拟为共享设备。",
+  "sc_45": "SPOOLing系统是将一台独占设备改造成多台虚拟设备的技术，实现设备虚拟化，典型应用是共享打印机。",
+  "sc_46": "设备的打开、关闭、读、写等操作是由文件系统来完成的。设备在Linux中被抽象为特殊文件，通过文件系统接口操作。",
+  "sc_47": "在Linux系统中，设备分为字符设备（按字符传输）和块设备（按块传输），网络设备通常不直接作为设备文件管理。",
+  "sc_48": "磁盘容量 = 磁头数 × 柱面数 × 扇区数 × 每扇区字节数。6个盘片=12个磁头面，100柱面，每道 sectors需看具体，计算总容量。",
+  "sc_49": "嵌入式操作系统的特点是实时性、可裁剪性、资源受限（小内存、低功耗）、可靠性高，适用于嵌入式设备。",
+  "sc_50": "在4种调度系统中，采用时间片轮转调度算法时，不区分作业类型和优先级，各就绪进程轮流执行一个时间片。",
+  "sc_51": "分布式操作系统与网络操作系统的不同在于：分布式系统具有透明性（用户不知道资源在哪台机器上），而网络系统中用户需要明确指定访问哪台机器。",
+
+  // === 判断题解析 ===
+  "tf_1": "错误。操作系统是系统软件的基础，其它软件（包括应用软件和支撑软件）都建立在操作系统之上，而非操作系统建立在其它软件之上。",
+  "tf_2": "错误。操作系统是系统软件的核心，必须先安装操作系统，然后才能在其上安装其它软件。",
+  "tf_3": "错误。并发指的是多个事件在同一时间段内发生（宏观上同时，微观上交替），而非多道程序“并行”（并行指同一时刻多个事件同时发生，需要多核或多CPU）。",
+  "tf_4": "正确。实时系统对可靠性的要求比分时系统更高，因为实时系统常用于关键场景（如航空航天、工业控制），故障可能导致严重后果。",
+  "tf_5": "正确。在UNIX/Linux系统上，系统调用以C函数的形式出现，程序员通过调用C库函数（如read、write）来使用系统调用。",
+  "tf_6": "正确。操作系统内核最高层是系统调用，它允许正在运行的程序直接获得操作系统的服务，如文件操作、进程控制等。",
+  "tf_7": "错误。操作系统以进程（而非程序）为单位分配系统资源。进程是资源分配的基本单位，程序是静态的不能作为分配单位。",
+  "tf_8": "错误。进程之间的互斥源于资源竞争，而同步源于进程间的协作关系（执行次序上的协调）。互斥和同步是两个不同的概念。",
+  "tf_9": "正确。信号量机制是有效的进程同步与互斥工具，信号量只能通过P（wait）和V（signal）操作来改变，保证了对共享资源的正确访问。",
+  "tf_10": "正确。死锁的四个必要条件是：互斥、请求和保持、不剥夺、环路等待。只要有一个条件不满足，就不会发生死锁。",
+  "tf_11": "错误。并非所有系统都必须具备三级调度（高级、中级、低级）。例如简单的批处理系统可能只有作业调度和进程调度，没有中级调度。",
+  "tf_12": "正确。确定作业调度算法时应使系统资源均衡使用，I/O繁忙型作业和CPU繁忙型作业搭配运行，可提高资源利用率。",
+  "tf_13": "错误。通常应赋予需要大量I/O的作业较高优先级（因为I/O操作慢，尽早启动可提高设备利用率），赋予CPU繁忙型作业较低优先级。",
+  "tf_14": "错误。中断处理分为中断响应和中断处理：中断响应由硬件实施（保存现场、找到中断向量），中断处理由软件实施（执行中断服务程序）。",
+  "tf_15": "正确。在现代操作系统中，内存分配由操作系统管理，不允许用户直接干预，以保证系统的安全和稳定。",
+  "tf_16": "正确。动态重定位是在程序运行期间，每次访问内存之前进行重定位，需要硬件支持（重定位寄存器），程序可以在内存中移动。",
+  "tf_17": "正确。采用动态重定位技术的系统，目标程序可以不经任何改动直接装入物理内存，因为地址转换在运行时由硬件动态完成。",
+  "tf_18": "错误。可重定位分区存储管理仍然要求为作业分配连续的内存单元，只是可以通过紧凑（compaction）技术合并空闲分区来减少碎片。",
+  "tf_19": "正确。虚拟存储器利用外存扩充内存，是逻辑上扩充了内存容量，物理内存容量并未增加。用户看到的地址空间可以远大于实际内存。",
+  "tf_20": "错误。虽然虚拟存储提供了巨大的存储空间，但用户地址空间大小受限于CPU的地址结构（如32位CPU最大4GB），并非不受任何限制。",
+  "tf_21": "正确。页式存储管理将内存分为固定大小的页，不利于页面共享（共享必须整页）和保护，相比段式管理灵活性较差。",
+  "tf_22": "错误。Linux文件包括普通文件、目录文件和特殊文件（设备文件）三大类，不是“用户文件”。",
+  "tf_23": "错误。顺序文件不仅适合建立在顺序存储设备（如磁带）上，也适合建立在磁盘上。磁盘上也可以存储顺序文件。",
+  "tf_24": "正确。可顺序存取的文件（如磁带上的文件）不一定能随机存取；但可随机存取的文件（如磁盘上的索引文件）都可以顺序存取。",
+  "tf_25": "正确。文件系统一般基于磁盘设备，磁带设备可以作为备份/转储设备使用，以提高系统的可靠性和数据安全性。",
+  "tf_26": "正确。二级目录结构允许不同用户使用相同的文件名，因为每个用户有独立的目录，不会产生重名冲突。",
+  "tf_27": "错误。在树形目录结构中，检索文件不一定从根目录开始，也可以从当前目录开始使用相对路径进行检索。",
+  "tf_28": "正确。设备绝对号是系统为每台设备确定的唯一编号，用于系统内部标识和管理设备。",
+  "tf_29": "正确。只有引入通道后，CPU才能与I/O设备并行工作，通道专门负责数据传输，CPU不必等待I/O完成。",
+  "tf_30": "错误。独占设备是指在同一时刻只能由一个进程使用的设备（如打印机），不是指“多个作业不同时使用的设备”。",
+  "tf_31": "正确。SPOOLing技术通过预输入和缓输出，将独占设备（如打印机）改造为共享设备，多个用户可以同时“使用”打印机。",
+  "tf_32": "正确。SPOOLing系统的核心是在磁盘上建立输入井和输出井，用驻留内存的进程模拟脱机外围设备操作，实现设备虚拟化。",
+  "tf_33": "错误。文件可以存储在不同的介质上（磁盘、磁带、光盘等），不一定存储在同一磁盘上。分布式文件系统甚至可以跨网络存储。"
+};
+</script>
+
+<!-- ========== 主逻辑 ========== -->
+<script>
+// ========== 全局状态 ==========
+var curCourse = 'ds';
+var curTab = 0;
+var examQs = [], examIdx = 0, examAns = {}, examDone = false, examRound = 0;
+var qAnswered = {}, qCorrect = {}, correctCount = 0;
+
+function WK() { return curCourse + '_wk'; }
+
+function getWB() { try { return JSON.parse(localStorage.getItem(WK()) || '{}'); } catch(e) { return {}; } }
+function saveWB(w) { localStorage.setItem(WK(), JSON.stringify(w)); }
+
+function getTested() { try { return JSON.parse(localStorage.getItem(curCourse + '_tested') || '[]'); } catch(e) { return []; } }
+function addTested(ids) {
+  var set = getTested();
+  var changed = false;
+  for (var i = 0; i < ids.length; i++) {
+    var sid = String(ids[i]);
+    if (set.indexOf(sid) === -1) { set.push(sid); changed = true; }
+  }
+  if (changed) localStorage.setItem(curCourse + '_tested', JSON.stringify(set));
+}
+
+// ========== 课程切换 ==========
+function switchCourse(c) {
+  curCourse = c;
+  var tabs = document.querySelectorAll('.course-tab');
+  tabs[0].classList.toggle('active', c === 'ds');
+  tabs[1].classList.toggle('active', c === 'os');
+  switchTab(0);
+}
+
+// ========== 功能标签切换 ==========
+function switchTab(t) {
+  curTab = t;
+  renderTabRow();
+  var C = document.getElementById('content');
+  C.innerHTML = '';
+  if (t === 0) renderRef(C);
+  else if (t === 1) renderStart(C);
+  else if (t === 2) renderWB(C);
+  else if (t === 3) renderAna(C);
+}
+
+function renderTabRow() {
+  var ns = ['&#128214; 答案参考','&#9999; 开始考试','&#128214;&#9961; 错题本','&#128161; 错题解析'];
+  var h = '';
+  for (var i = 0; i < ns.length; i++) {
+    var cls = (i === curTab) ? ' active' : '';
+    h += '<div class="tab-btn' + cls + '" onclick="switchTab(' + i + ')">' + ns[i] + '</div>';
+  }
+  document.getElementById('tabRow').innerHTML = h;
+}
+
+// ========== 工具函数 ==========
+function eh(t) {
+  var s = String(t || '');
+  s = s.replace(/&/g, '&amp;');
+  s = s.replace(/</g, '&lt;');
+  s = s.replace(/>/g, '&gt;');
+  s = s.replace(/"/g, '&quot;');
+  return s;
+}
+
+// ========== 0. 答案参考 ==========
+function renderRef(C) {
+  if (curCourse === 'ds') renderDS_Ref(C);
+  else renderOS_Ref(C);
+}
+
+function renderDS_Ref(C) {
+  var h = '<div style="text-align:center;color:#1565c0;margin-bottom:8px;font-size:17px;font-weight:600">&#128214; 数据结构（本）—— 答案参考</div>';
+  h += '<div style="text-align:center;color:#999;margin-bottom:16px;font-size:13px">共 ' + QUESTION_BANK.length + ' 道题 &middot; 答案与考试系统完全一致</div>';
+  h += '<div id="refFlt" class="btn-row" style="margin-bottom:16px">';
+  h += '<button class="btn btn-pri" onclick="renderDS_RefType(1,this)">填空题</button>';
+  h += '<button class="btn btn-sec" onclick="renderDS_RefType(2,this)">单项选择题</button>';
+  h += '<button class="btn btn-sec" onclick="renderDS_RefType(3,this)">综合题</button>';
+  h += '<button class="btn btn-sec" onclick="renderDS_RefType(4,this)">程序填空题</button>';
+  h += '</div><div id="refBody"></div>';
+  C.innerHTML = h;
+  renderDS_RefType(1);
+}
+
+function renderDS_RefType(t, btn) {
+  var btns = document.querySelectorAll('#refFlt .btn');
+  for (var j = 0; j < btns.length; j++) {
+    btns[j].className = 'btn btn-sec';
+  }
+  if (btn) btn.className = 'btn btn-pri';
+  
+  var qs = [];
+  for (var k = 0; k < QUESTION_BANK.length; k++) {
+    if (QUESTION_BANK[k].quiz_index === t) qs.push(QUESTION_BANK[k]);
+  }
+  var nms = {1:'填空题', 2:'单项选择题', 3:'综合题', 4:'程序填空题'};
+  var h = '<div style="font-weight:600;color:#2e7d32;margin-bottom:12px">' + nms[t] + '（共 ' + qs.length + ' 题）</div>';
+  
+  for (var idx = 0; idx < qs.length; idx++) {
+    var q = qs[idx];
+    var num = idx + 1;
+    var uid = q.uid;
+    var ai = (ANSWER_INDEX || {})[uid] || {};
+    var ans = ai.answer || '';
+    var exp = ai.explanation || '';
+    
+    h += '<div class="q-card"><span class="q-num">' + num + '</span><span class="q-text">' + eh(q.question) + '</span>';
+    
+    if (t === 2 && q.options) {
+      h += '<div class="q-opts">';
+      var letters = 'ABCDEFG';
+      for (var li = 0; li < letters.length; li++) {
+        if (!q.options[li]) continue;
+        var ok = (ai.option_index === li);
+        var cls = ok ? ' correct' : '';
+        h += '<div class="q-opt' + cls + '">' + letters[li] + '. ' + eh(q.options[li].text) + '</div>';
+      }
+      h += '</div>';
+    }
+    
+    if (ans) h += '<div style="margin-top:8px;padding:6px 12px;background:#fff5f5;border-left:3px solid #f44336;border-radius:0 8px 8px 0;color:#c62828;font-weight:600;font-size:13px">&#9989; 正确答案：' + eh(ans) + '</div>';
+    if (exp) h += '<div style="margin-top:5px;padding:5px 10px;background:#f6f8fa;border-radius:6px;font-size:12px;color:#666">&#128161; 解析：' + eh(exp) + '</div>';
+    h += '</div>';
+  }
+  document.getElementById('refBody').innerHTML = h;
+}
+
+function renderOS_Ref(C) {
+  var h = '<div style="text-align:center;color:#2e7d32;margin-bottom:8px;font-size:17px;font-weight:600">&#128187; 操作系统 —— 答案参考</div>';
+  h += '<div style="text-align:center;color:#999;margin-bottom:16px;font-size:13px">单选题 ' + OS_SC.length + ' 题 &middot; 判断题 ' + OS_TF.length + ' 题 &middot; 配伍题 ' + OS_MT.length + ' 组</div>';
+  h += '<div id="refFlt" class="btn-row" style="margin-bottom:16px">';
+  h += '<button class="btn btn-pri" onclick="renderOS_RefType(&apos;sc&apos;,this)">单选题</button>';
+  h += '<button class="btn btn-sec" onclick="renderOS_RefType(&apos;tf&apos;,this)">判断题</button>';
+  h += '<button class="btn btn-sec" onclick="renderOS_RefType(&apos;mt&apos;,this)">配伍题</button>';
+  h += '</div><div id="refBody"></div>';
+  C.innerHTML = h;
+  renderOS_RefType('sc');
+}
+
+function renderOS_RefType(t, btn) {
+  var btns = document.querySelectorAll('#refFlt .btn');
+  for (var j = 0; j < btns.length; j++) {
+    btns[j].className = 'btn btn-sec';
+  }
+  if (btn) btn.className = 'btn btn-pri';
+  
+  var h = '';
+  if (t === 'sc') {
+    h += '<div style="font-weight:600;color:#2e7d32;margin-bottom:12px">单选题（共 ' + OS_SC.length + ' 题）</div>';
+    for (var si = 0; si < OS_SC.length; si++) {
+      var q = OS_SC[si];
+      h += '<div class="q-card"><span class="q-num">' + q.id + '</span><span class="q-text">' + eh(q.q) + '</span>';
+      h += '<div class="q-opts">';
+      for (var oi = 0; oi < q.o.length; oi++) {
+        var opt = q.o[oi];
+        var firstChar = opt.charAt(0);
+        var isCorrect = (firstChar === q.a);
+        var cls = isCorrect ? ' correct' : '';
+        h += '<div class="q-opt' + cls + '">' + eh(opt) + '</div>';
+      }
+      h += '</div></div>';
+    }
+  } else if (t === 'tf') {
+    h += '<div style="font-weight:600;color:#2e7d32;margin-bottom:12px">判断题（共 ' + OS_TF.length + ' 题）</div>';
+    for (var ti = 0; ti < OS_TF.length; ti++) {
+      var q = OS_TF[ti];
+      var ansText = (q.a === '\u221a' || q.a === '\u221A') ? '&#10004;' : '&#10008;';
+      var cls = (q.a === '\u221a' || q.a === '\u221A') ? '' : ' correct';
+      h += '<div class="q-card"><span class="q-num">' + q.id + '</span><span class="q-text">' + eh(q.q) + '</span>';
+      h += '<div style="margin-top:8px;padding:4px 12px;background:#fff5f5;border-left:3px solid #f44336;border-radius:0 8px 8px 0;color:#c62828;font-weight:600;font-size:13px">&#9989; ' + ansText + '</div></div>';
+    }
+  } else if (t === 'mt') {
+    h += '<div style="font-weight:600;color:#2e7d32;margin-bottom:12px">配伍题（共 ' + OS_MT.length + ' 组）</div>';
+    for (var mi = 0; mi < OS_MT.length; mi++) {
+      var m = OS_MT[mi];
+      h += '<div class="q-card"><span class="q-num">' + m.id + '</span><span class="q-text">配伍第 ' + m.id + ' 组</span>';
+      h += '<div class="mc"><div class="ml">';
+      for (var li = 0; li < m.left.length; li++) {
+        h += '<div class="mi">' + (li+1) + '. ' + eh(m.left[li]) + '</div>';
+      }
+      h += '</div><div class="mr">';
+      for (var ri = 0; ri < m.right.length; ri++) {
+        var ansLetter = m.a[ri];
+        var letters = 'ABCDE';
+        var letterLabel = letters[ri] || '?';
+        var isCorrectAns = true; // always show answer
+        h += '<div class="mi correct">' + ansLetter + '-' + letterLabel + '. ' + eh(m.right[ri]) + '</div>';
+      }
+      h += '</div></div></div>';
+    }
+  }
+  document.getElementById('refBody').innerHTML = h;
+}
+
+// ========== 1. 开始考试 ==========
+function renderStart(C) {
+  // 防御性重置：清空上一轮考试的作答状态
+  examQs = []; examIdx = 0; examAns = {}; examDone = false;
+  qAnswered = {}; qCorrect = {}; correctCount = 0;
+  examRound = parseInt(localStorage.getItem(curCourse + '_round') || '0');
+  if (curCourse === 'ds') {
+    var dsOkCount = 0;
+    var dsOkUids = [];
+    for (var i = 0; i < QUESTION_BANK.length; i++) {
+      var uid = QUESTION_BANK[i].uid;
+      var ai = (ANSWER_INDEX || {})[uid] || {};
+      if (ai.answer && QUESTION_BANK[i].quiz_index === 2) { dsOkCount++; dsOkUids.push(uid); }
+    }
+    var testedDS = getTested();
+    var coveredDS = 0;
+    for (var ti = 0; ti < dsOkUids.length; ti++) {
+      if (testedDS.indexOf(String(dsOkUids[ti])) !== -1) coveredDS++;
+    }
+    var uncoveredDS = dsOkCount - coveredDS;
+    var h = '<div class="sg">';
+    h += '<div class="sc"><div class="sn">' + QUESTION_BANK.length + '</div><div class="sl">总题数</div></div>';
+    h += '<div class="sc"><div class="sn" style="color:#2e7d32">' + dsOkCount + '</div><div class="sl">有答案题目</div></div>';
+    h += '<div class="sc"><div class="sn" style="color:#7b1fa2">' + coveredDS + '</div><div class="sl">已覆盖题目</div></div>';
+    h += '<div class="sc"><div class="sn" style="color:#f57c00">' + uncoveredDS + '</div><div class="sl">未抽取题目</div></div>';
+    var wb = getWB();
+    var wrongKeys = Object.keys(wb);
+    h += '<div class="sc"><div class="sn" style="color:#e65100">' + wrongKeys.length + '</div><div class="sl">错题数</div></div>';
+    h += '<div class="sc"><div class="sn" style="color:#1976d2">' + examRound + '</div><div class="sl">已考轮次</div></div>';
+    h += '</div>';
+    h += '<p style="text-align:center;color:#666;margin:16px 0;font-size:14px">每轮随机抽取 15 道有答案的单选题，优先抽取你的错题</p>';
+    h += '<div class="btn-row"><button class="btn btn-pri" onclick="startDS()" style="padding:14px 48px;font-size:16px">&#9999; 开始考试</button></div>';
+    C.innerHTML = h;
+  } else {
+    var totalOS = OS_SC.length + OS_TF.length;
+    // 收集所有可考题目ID
+    var allOSIds = [];
+    for (var sci0 = 0; sci0 < OS_SC.length; sci0++) { allOSIds.push(String(OS_SC[sci0].id)); }
+    for (var tfi0 = 0; tfi0 < OS_TF.length; tfi0++) { allOSIds.push(String(OS_TF[tfi0].id)); }
+    var testedOS = getTested();
+    var coveredOS = 0;
+    for (var ci = 0; ci < allOSIds.length; ci++) {
+      if (testedOS.indexOf(allOSIds[ci]) !== -1) coveredOS++;
+    }
+    var uncoveredOS = totalOS - coveredOS;
+    var wb = getWB();
+    var wKeys = Object.keys(wb);
+    var h = '<div class="sg">';
+    h += '<div class="sc"><div class="sn">' + totalOS + '</div><div class="sl">总题数</div></div>';
+    h += '<div class="sc"><div class="sn" style="color:#7b1fa2">' + coveredOS + '</div><div class="sl">已覆盖题目</div></div>';
+    h += '<div class="sc"><div class="sn" style="color:#f57c00">' + uncoveredOS + '</div><div class="sl">未抽取题目</div></div>';
+    h += '<div class="sc"><div class="sn" style="color:#e65100">' + wKeys.length + '</div><div class="sl">错题数</div></div>';
+    h += '<div class="sc"><div class="sn" style="color:#1976d2">' + examRound + '</div><div class="sl">已考轮次</div></div>';
+    h += '</div>';
+    h += '<p style="text-align:center;color:#666;margin:16px 0;font-size:14px">每轮随机抽取 15 题（单选+判断），优先抽取错题</p>';
+    h += '<div class="btn-row"><button class="btn btn-pri" onclick="startOS()" style="padding:14px 48px;font-size:16px;background:linear-gradient(135deg,#43a047,#2e7d32)">&#9999; 开始考试</button></div>';
+    C.innerHTML = h;
+  }
+}
+
+// --- 数据结构考试 ---
+function startDS() {
+  var okList = [];
+  for (var i = 0; i < QUESTION_BANK.length; i++) {
+    var q = QUESTION_BANK[i];
+    var uid = q.uid;
+    var ai = (ANSWER_INDEX || {})[uid] || {};
+    if (ai.answer && q.quiz_index === 2) okList.push(q);
+  }
+  var wb = getWB();
+  var wkKeys = Object.keys(wb);
+  // 优先抽错题
+  var pool = [];
+  var used = {};
+  for (var wi = 0; wi < wkKeys.length; wi++) {
+    var wid = wkKeys[wi];
+    for (var fi = 0; fi < okList.length; fi++) {
+      if (okList[fi].uid === wid && !used[wid]) {
+        pool.push(okList[fi]);
+        used[wid] = 1;
+        break;
+      }
+    }
+  }
+  // 补充随机
+  var rest = [];
+  for (var ri = 0; ri < okList.length; ri++) {
+    if (!used[okList[ri].uid]) rest.push(okList[ri]);
+  }
+  // Fisher-Yates shuffle
+  for (var si = rest.length - 1; si > 0; si--) {
+    var sj = Math.floor(Math.random() * (si + 1));
+    var tmp = rest[si]; rest[si] = rest[sj]; rest[sj] = tmp;
+  }
+  while (pool.length < 15 && rest.length > 0) {
+    pool.push(rest.shift());
+  }
+  // Shuffle final pool
+  for (var pi = pool.length - 1; pi > 0; pi--) {
+    var pj = Math.floor(Math.random() * (pi + 1));
+    var tmp2 = pool[pi]; pool[pi] = pool[pj]; pool[pj] = tmp2;
+  }
+  examQs = pool.slice(0, 15);
+  examIdx = 0;
+  examAns = {};
+  examDone = false;
+  qAnswered = {}; qCorrect = {}; correctCount = 0;
+  examRound++;
+  localStorage.setItem(curCourse + '_round', examRound);
+  renderDS_Q();
+}
+
+function renderDS_Q() {
+  var C = document.getElementById('content');
+  if (examIdx >= examQs.length) { submitDS(); return; }
+  var q = examQs[examIdx];
+  var total = examQs.length;
+  var answered = Object.keys(qAnswered).length;
+  var isAnswered = !!qAnswered[q.uid];
+  var tns = {1:'填空题', 2:'单项选择题', 3:'综合题', 4:'程序填空题'};
+  var bcs = {1:'#a5d6a7', 2:'#90caf9', 3:'#ffcc80', 4:'#ce93d8'};
+  
+  var h = '<div class="exam-hd"><span>第 ' + examRound + ' 轮 &middot; 第 ' + (examIdx+1) + ' 题 / 共 ' + total + ' 题 &middot; 已答对 ' + correctCount + ' 题</span>';
+  h += '<div class="exam-pg"><div style="display:flex;justify-content:space-between;font-size:13px;color:#666"><span>已作答 ' + answered + '/' + total + '</span></div>';
+  h += '<div class="exam-pg-bar"><div class="exam-pg-fill" style="width:' + Math.round(answered/total*100) + '%"></div></div></div>';
+  h += '<button class="btn btn-sec" onclick="switchTab(1)">退出考试</button></div>';
+  
+  h += '<div class="exam-q"><div style="margin-bottom:14px"><span style="background:' + (bcs[q.quiz_index]||'#eee') + ';color:#333;padding:3px 12px;border-radius:12px;font-size:12px;font-weight:600">' + (tns[q.quiz_index]||'') + '</span></div>';
+  h += '<div style="font-size:15px;color:#333;margin-bottom:18px;line-height:1.7">' + eh(q.question) + '</div>';
+  
+  if (q.quiz_index === 2 && q.options) {
+    var ai = ((ANSWER_INDEX || {})[q.uid] || {});
+    var correctIdx = (ai.option_index !== null && ai.option_index !== undefined) ? ai.option_index : q.correct_option_index;
+    h += '<div class="exam-opts">';
+    var letters = 'ABCDEFG';
+    for (var oi2 = 0; oi2 < letters.length; oi2++) {
+      if (!q.options[oi2]) continue;
+      var L = letters[oi2];
+      var sel = (examAns[q.uid] === oi2);
+      var cls = 'exam-opt';
+      if (isAnswered) {
+        if (oi2 === correctIdx) cls += ' correct';
+        else if (sel) cls += ' wrong';
+      } else if (sel) {
+        cls += ' selected';
+      }
+      var clickAttr = isAnswered ? ' style="cursor:default"' : (' onclick="dsSel(\'' + q.uid + '\',' + oi2 + ')"');
+      h += '<div class="' + cls + '"' + clickAttr + '><span class="ol">' + L + '</span><span>' + eh(q.options[oi2].text) + '</span></div>';
+    }
+    h += '</div>';
+    
+    if (isAnswered) {
+      var isCorr = qCorrect[q.uid];
+      var bg = isCorr ? '#e8f5e9' : '#ffebee';
+      var fg = isCorr ? '#2e7d32' : '#c62828';
+      var msg = isCorr ? '&#9989; 回答正确！' : '&#10060; 回答错误！';
+      h += '<div style="margin-top:16px;padding:12px 16px;border-radius:8px;background:' + bg + ';color:' + fg + ';font-weight:600;font-size:14px">' + msg;
+      if (!isCorr) {
+        h += ' 正确答案：' + (letters[correctIdx] || '?') + '. ' + eh(q.options[correctIdx] ? q.options[correctIdx].text : '');
+      }
+      h += '</div>';
+      if (ai.explanation) {
+        h += '<div style="margin-top:8px;padding:10px 14px;background:#eff6ff;border-radius:8px;color:#1e40af;font-size:13px;line-height:1.6">&#128161; 解析：' + eh(ai.explanation) + '</div>';
+      }
+    }
+  } else {
+    var ai2 = ((ANSWER_INDEX || {})[q.uid] || {});
+    h += '<div style="padding:12px 16px;background:#fffde7;border:1px solid #fff9c4;border-radius:10px;color:#f57f17;font-size:14px">';
+    h += '&#128161; 本题为' + (tns[q.quiz_index]||'') + '，请对照答案自查。<br>正确答案：' + eh(ai2.answer || '(见答案参考)');
+    h += '</div>';
+  }
+  h += '</div>';
+  
+  h += '<div class="btn-row">';
+  if (examIdx > 0) h += '<button class="btn btn-sec" onclick="dsPrev()">&#8592; 上一题</button>';
+  if (examIdx === total - 1) {
+    if (isAnswered || q.quiz_index !== 2) h += '<button class="btn btn-pri" onclick="submitDS()">&#9989; 查看成绩</button>';
+    else h += '<button class="btn btn-pri" disabled>请先作答</button>';
+  } else {
+    h += '<button class="btn btn-pri" onclick="dsNext()">下一题 &#8594;</button>';
+  }
+  h += '</div>';
+  C.innerHTML = h;
+}
+
+function dsSel(uid, i) {
+  if (qAnswered[uid]) return;
+  examAns[uid] = i;
+  qAnswered[uid] = true;
+  var q = examQs[examIdx];
+  var ai = ((ANSWER_INDEX || {})[uid] || {});
+  var correctIdx = (ai.option_index !== null && ai.option_index !== undefined) ? ai.option_index : q.correct_option_index;
+  var isCorrect = (i === correctIdx);
+  qCorrect[uid] = isCorrect;
+  if (isCorrect) { correctCount++; }
+  else {
+    var wb = getWB();
+    if (!wb[uid]) wb[uid] = {count:0, quiz_index: q.quiz_index};
+    wb[uid].count++;
+    saveWB(wb);
+  }
+  renderDS_Q();
+}
+function dsNext() { if (examIdx < examQs.length - 1) { examIdx++; renderDS_Q(); } }
+function dsPrev() { if (examIdx > 0) { examIdx--; renderDS_Q(); } }
+
+function submitDS() {
+  examDone = true;
+  var wb = getWB();
+  for (var qi = 0; qi < examQs.length; qi++) {
+    var q = examQs[qi];
+    if (q.quiz_index === 2 && !qAnswered[q.uid]) {
+      if (!wb[q.uid]) wb[q.uid] = {count:0, quiz_index: q.quiz_index};
+      wb[q.uid].count++;
+    }
+  }
+  saveWB(wb);
+  // 记录本轮已考题目（去重）
+  var ids = [];
+  for (var qi2 = 0; qi2 < examQs.length; qi2++) { ids.push(examQs[qi2].uid); }
+  addTested(ids);
+  var cor = correctCount;
+  var score = Math.round(cor / examQs.length * 100);
+  var C = document.getElementById('content');
+  var h = '<div class="res-card"><div style="font-size:18px;color:#555">第 ' + examRound + ' 轮成绩</div>';
+  var scoreColor = (score >= 80) ? '#2e7d32' : '#e65100';
+  h += '<div class="res-score" style="color:' + scoreColor + '">' + score + '分</div>';
+  h += '<div style="color:#555;font-size:15px">答对 ' + cor + ' 题 / 共 ' + examQs.length + ' 题</div>';
+  if (cor === examQs.length) h += '<div style="color:#2e7d32;margin-top:10px;font-size:15px">&#127881; 满分！太棒了！</div>';
+  h += '<div class="btn-row"><button class="btn btn-pri" onclick="startDS()" style="margin-right:10px">&#8635; 开始新一轮</button>';
+  h += '<button class="btn btn-sec" onclick="switchTab(2)">&#128214;&#9961; 查看错题本</button></div></div>';
+  C.innerHTML = h;
+}
+
+// --- 操作系统考试 ---
+function startOS() {
+  var all = [];
+  for (var sci = 0; sci < OS_SC.length; sci++) { all.push({id: OS_SC[sci].id, type: 'sc'}); }
+  for (var tfi = 0; tfi < OS_TF.length; tfi++) { all.push({id: OS_TF[tfi].id, type: 'tf'}); }
+  var wb = getWB();
+  var wk = Object.keys(wb);
+  var pool = [];
+  var used = {};
+  // 优先错题
+  for (var wki = 0; wki < wk.length; wki++) {
+    var wid = wk[wki];
+    for (var ai = 0; ai < all.length; ai++) {
+      if (String(all[ai].id) === wid && !used[wid]) {
+        pool.push(all[ai]);
+        used[wid] = 1;
+        break;
+      }
+    }
+  }
+  // 补充随机
+  var rest = [];
+  for (var ar = 0; ar < all.length; ar++) {
+    if (!used[String(all[ar].id)]) rest.push(all[ar]);
+  }
+  for (var sr = rest.length - 1; sr > 0; sr--) {
+    var sj = Math.floor(Math.random() * (sr + 1));
+    var tmp = rest[sr]; rest[sr] = rest[sj]; rest[sj] = tmp;
+  }
+  while (pool.length < 15 && rest.length > 0) { pool.push(rest.shift()); }
+  for (var sp = pool.length - 1; sp > 0; sp--) {
+    var spj = Math.floor(Math.random() * (sp + 1));
+    var tp = pool[sp]; pool[sp] = pool[spj]; pool[spj] = tp;
+  }
+  examQs = pool.slice(0, 15);
+  examIdx = 0;
+  examAns = {};
+  examDone = false;
+  qAnswered = {}; qCorrect = {}; correctCount = 0;
+  examRound++;
+  localStorage.setItem(curCourse + '_round', examRound);
+  renderOS_Q();
+}
+
+function getOSQuestion(id, type) {
+  if (type === 'sc') {
+    for (var i = 0; i < OS_SC.length; i++) { if (OS_SC[i].id === id) return OS_SC[i]; }
+  } else {
+    for (var j = 0; j < OS_TF.length; j++) { if (OS_TF[j].id === id) return OS_TF[j]; }
+  }
+  return null;
+}
+
+function renderOS_Q() {
+  var C = document.getElementById('content');
+  if (examIdx >= examQs.length) { submitOS(); return; }
+  var eq = examQs[examIdx];
+  var q = getOSQuestion(eq.id, eq.type);
+  if (!q) { examIdx++; renderOS_Q(); return; }
+  var total = examQs.length;
+  var answered = Object.keys(qAnswered).length;
+  var isAnswered = !!qAnswered[q.id];
+  
+  var h = '<div class="exam-hd"><span>第 ' + examRound + ' 轮 &middot; 第 ' + (examIdx+1) + ' 题 / 共 ' + total + ' 题 &middot; 已答对 ' + correctCount + ' 题</span>';
+  h += '<div class="exam-pg"><div style="display:flex;justify-content:space-between;font-size:13px;color:#666"><span>已作答 ' + answered + '/' + total + '</span></div>';
+  h += '<div class="exam-pg-bar"><div class="exam-pg-fill" style="width:' + Math.round(answered/total*100) + '%"></div></div></div>';
+  h += '<button class="btn btn-sec" onclick="switchTab(1)">退出考试</button></div>';
+  
+  var typeLabel = (eq.type === 'sc') ? '单选题' : '判断题';
+  h += '<div class="exam-q"><div class="exam-q-title">[' + typeLabel + '] ' + eh(q.q) + '</div>';
+  
+  if (eq.type === 'sc') {
+    h += '<div class="exam-opts">';
+    for (var oi = 0; oi < q.o.length; oi++) {
+      var opt = q.o[oi];
+      var L = opt.charAt(0);
+      var sel = (examAns[q.id] === L);
+      var cls = 'exam-opt';
+      if (isAnswered) {
+        if (L === q.a) cls += ' correct';
+        else if (sel && L !== q.a) cls += ' wrong';
+      } else if (sel) {
+        cls += ' selected';
+      }
+      var clickAttr = isAnswered ? ' style="cursor:default"' : (' data-qid="' + q.id + '" data-val="' + L + '" onclick="osSelSC(this)"');
+      h += '<div class="' + cls + '"' + clickAttr + '><span class="ol">' + L + '</span><span>' + eh(opt.substring(2)) + '</span></div>';
+    }
+    h += '</div>';
+  } else {
+    h += '<div class="tf-btns">';
+    var vals = ['&#10004;', '&#10008;'];
+    for (var vi = 0; vi < 2; vi++) {
+      var v = (vi === 0) ? '√' : '×';
+      var sel = (examAns[q.id] === v);
+      var clsBase = 'tf-btn';
+      var clsExtra = '';
+      if (isAnswered) {
+        if (v === q.a) clsExtra = ' correct';
+        else if (sel) clsExtra = ' wrong';
+      } else if (sel) {
+        clsExtra = ' selected';
+      }
+      var clickAttr2 = isAnswered ? ' disabled' : (' data-qid="' + q.id + '" data-val="' + v + '" onclick="osSelTF(this)"');
+      h += '<button class="' + clsBase + clsExtra + '"' + clickAttr2 + '>' + vals[vi] + '</button>';
+    }
+    h += '</div>';
+  }
+  
+  if (isAnswered) {
+    var isCorrect = qCorrect[q.id];
+    var bg = isCorrect ? '#e8f5e9' : '#ffebee';
+    var fg = isCorrect ? '#2e7d32' : '#c62828';
+    var msg = isCorrect ? '&#9989; 回答正确！' : '&#10060; 回答错误！';
+    h += '<div style="margin-top:16px;padding:12px 16px;border-radius:8px;background:' + bg + ';color:' + fg + ';font-weight:600;font-size:14px">' + msg;
+    if (!isCorrect) {
+      var rightAns = '';
+      if (eq.type === 'sc') { rightAns = q.a + '. ' + findOptText(q, q.a); }
+      else { rightAns = (q.a === '√') ? '正确' : '错误'; }
+      h += ' 正确答案：' + rightAns;
+    }
+    h += '</div>';
+    var expKey = (eq.type === 'sc') ? ('sc_' + q.id) : ('tf_' + q.id);
+    var exp = (typeof OS_EXP !== 'undefined') ? (OS_EXP[expKey] || '') : '';
+    if (exp) {
+      h += '<div style="margin-top:8px;padding:10px 14px;background:#eff6ff;border-radius:8px;color:#1e40af;font-size:13px;line-height:1.6">&#128161; 解析：' + eh(exp) + '</div>';
+    }
+  }
+  
+  h += '</div>';
+  h += '<div class="btn-row">';
+  if (examIdx > 0) h += '<button class="btn btn-sec" onclick="osPrev()">&#8592; 上一题</button>';
+  if (examIdx === total - 1) {
+    if (isAnswered) h += '<button class="btn btn-pri" style="background:linear-gradient(135deg,#43a047,#2e7d32)" onclick="submitOS()">&#9989; 查看成绩</button>';
+    else h += '<button class="btn btn-pri" style="background:linear-gradient(135deg,#43a047,#2e7d32)" disabled>请先作答</button>';
+  } else {
+    h += '<button class="btn btn-pri" style="background:linear-gradient(135deg,#43a047,#2e7d32)" onclick="osNext()">下一题 &#8594;</button>';
+  }
+  h += '</div>';
+  C.innerHTML = h;
+}
+
+function findOptText(q, letter) {
+  for (var i = 0; i < q.o.length; i++) {
+    if (q.o[i].charAt(0) === letter) return q.o[i].substring(2);
+  }
+  return '';
+}
+
+function osSelSC(el) {
+  var id = el.getAttribute('data-qid');
+  if (qAnswered[id]) return;
+  var L = el.getAttribute('data-val');
+  examAns[id] = L;
+  qAnswered[id] = true;
+  var eq = examQs[examIdx];
+  var q = getOSQuestion(eq.id, eq.type);
+  var isCorrect = (L === q.a);
+  qCorrect[id] = isCorrect;
+  if (isCorrect) { correctCount++; }
+  else {
+    var wb = getWB();
+    if (!wb[id]) wb[id] = {count:0, type: eq.type};
+    wb[id].count++;
+    saveWB(wb);
+  }
+  renderOS_Q();
+}
+function osSelTF(el) {
+  var id = el.getAttribute('data-qid');
+  if (qAnswered[id]) return;
+  var v = el.getAttribute('data-val');
+  examAns[id] = v;
+  qAnswered[id] = true;
+  var eq = examQs[examIdx];
+  var q = getOSQuestion(eq.id, eq.type);
+  var isCorrect = (v === q.a);
+  qCorrect[id] = isCorrect;
+  if (isCorrect) { correctCount++; }
+  else {
+    var wb = getWB();
+    if (!wb[id]) wb[id] = {count:0, type: eq.type};
+    wb[id].count++;
+    saveWB(wb);
+  }
+  renderOS_Q();
+}
+function osNext() { if (examIdx < examQs.length - 1) { examIdx++; renderOS_Q(); } }
+function osPrev() { if (examIdx > 0) { examIdx--; renderOS_Q(); } }
+
+function submitOS() {
+  examDone = true;
+  var wb = getWB();
+  for (var qi = 0; qi < examQs.length; qi++) {
+    var eq = examQs[qi];
+    var sid = String(eq.id);
+    if (!qAnswered[sid]) {
+      if (!wb[sid]) wb[sid] = {count:0, type: eq.type};
+      wb[sid].count++;
+    }
+  }
+  saveWB(wb);
+  // 记录本轮已考题目（去重）
+  var oids = [];
+  for (var qi2 = 0; qi2 < examQs.length; qi2++) { oids.push(examQs[qi2].id); }
+  addTested(oids);
+  var cor = correctCount;
+  var score = Math.round(cor / examQs.length * 100);
+  var C = document.getElementById('content');
+  var h = '<div class="res-card"><div style="font-size:18px;color:#555">第 ' + examRound + ' 轮成绩</div>';
+  var scColor = (score >= 80) ? '#2e7d32' : '#e65100';
+  h += '<div class="res-score" style="color:' + scColor + '">' + score + '分</div>';
+  h += '<div style="color:#555;font-size:15px">答对 ' + cor + ' 题 / 共 ' + examQs.length + ' 题</div>';
+  if (cor === examQs.length) h += '<div style="color:#2e7d32;margin-top:10px;font-size:15px">&#127881; 满分！太棒了！</div>';
+  h += '<div class="btn-row"><button class="btn btn-pri" style="background:linear-gradient(135deg,#43a047,#2e7d32);margin-right:10px" onclick="startOS()">&#8635; 再来一轮</button>';
+  h += '<button class="btn btn-sec" onclick="switchTab(2)">&#128214;&#9961; 查看错题本</button></div></div>';
+  C.innerHTML = h;
+}
+
+// ========== 2. 错题本 ==========
+function renderWB(C) {
+  var wb = getWB();
+  var keys = Object.keys(wb);
+  var courseName = (curCourse === 'ds') ? '数据结构（本）' : '操作系统';
+  var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">';
+  h += '<h3 style="color:#e65100;font-size:17px">&#128214;&#9961; ' + courseName + ' —— 错题本</h3>';
+  h += '<button class="btn" style="background:#ef5350;color:#fff" onclick="clearWB()">&#128465;&#65039; 清空错题本</button>';
+  h += '</div>';
+  if (keys.length === 0) {
+    h += '<div style="text-align:center;color:#999;padding:50px 0;font-size:15px">&#127881; 暂无错题，继续保持！</div>';
+    C.innerHTML = h;
+    return;
+  }
+  h += '<div style="display:grid;gap:8px">';
+  // Sort by count desc
+  keys.sort(function(a,b) { return wb[b].count - wb[a].count; });
+  for (var ki = 0; ki < keys.length; ki++) {
+    var id = keys[ki];
+    var shortText = '';
+    if (curCourse === 'ds') {
+      var dq = null;
+      for (var di = 0; di < QUESTION_BANK.length; di++) {
+        if (QUESTION_BANK[di].uid === id) { dq = QUESTION_BANK[di]; break; }
+      }
+      if (dq) shortText = id + ' ' + dq.question.substring(0, 70) + '...';
+    } else {
+      var oq = null;
+      for (var oi = 0; oi < OS_SC.length; oi++) { if (String(OS_SC[oi].id) === id) { oq = OS_SC[oi]; break; } }
+      if (!oq) { for (var ti2 = 0; ti2 < OS_TF.length; ti2++) { if (String(OS_TF[ti2].id) === id) { oq = OS_TF[ti2]; break; } } }
+      if (oq) shortText = id + ' ' + oq.q.substring(0, 70) + '...';
+    }
+    h += '<div class="wi-item"><div style="flex:1;font-size:14px;color:#333">' + eh(shortText) + '</div>';
+    h += '<span style="background:#ff9800;color:#fff;padding:3px 12px;border-radius:12px;font-size:12px;font-weight:600;white-space:nowrap">错 ' + wb[id].count + ' 次</span></div>';
+  }
+  h += '</div>';
+  C.innerHTML = h;
+}
+
+function clearWB() { if (confirm('确定清空错题本？')) { localStorage.removeItem(WK()); switchTab(2); } }
+
+// ========== 3. 错题解析 ==========
+function renderAna(C) {
+  var wb = getWB();
+  var keys = Object.keys(wb);
+  var courseName = (curCourse === 'ds') ? '数据结构（本）' : '操作系统';
+  var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">';
+  h += '<h3 style="color:#1565c0;font-size:17px">&#128161; ' + courseName + ' —— 错题解析</h3>';
+  h += '<span style="font-size:13px;color:#999">共 ' + keys.length + ' 道错题</span>';
+  h += '</div>';
+  if (keys.length === 0) {
+    h += '<div style="text-align:center;color:#999;padding:50px 0;font-size:15px">&#127881; 暂无错题，先做几道题吧！</div>';
+    C.innerHTML = h;
+    return;
+  }
+  // 按累计错误次数降序排列
+  keys.sort(function(a, b) { return (wb[b].count || 0) - (wb[a].count || 0); });
+  for (var ai = 0; ai < keys.length; ai++) {
+    var id = keys[ai];
+    h += '<div class="an-card"><div style="float:right;background:#ffebee;color:#c62828;font-size:12px;padding:2px 10px;border-radius:10px;font-weight:600">累计错误 ' + wb[id].count + ' 次</div>';
+    if (curCourse === 'ds') {
+      var dq = null;
+      for (var di = 0; di < QUESTION_BANK.length; di++) {
+        if (QUESTION_BANK[di].uid === id) { dq = QUESTION_BANK[di]; break; }
+      }
+      if (dq) h += '<div style="font-weight:600;margin-bottom:10px;font-size:14px;color:#333">' + eh(dq.question) + '</div>';
+      var dai = (ANSWER_INDEX || {})[id] || {};
+      if (dai.answer) h += '<div style="padding:8px 14px;background:#e8f5e9;border-radius:8px;color:#2e7d32;font-weight:600;font-size:14px;margin-top:8px">&#9989; 正确答案：' + eh(dai.answer) + '</div>';
+      if (dai.explanation) h += '<div style="padding:8px 14px;background:#eff6ff;border-radius:8px;color:#1e40af;font-size:13px;margin-top:6px">&#128161; 解析：' + eh(dai.explanation) + '</div>';
+    } else {
+      var oq = null;
+      var oqType = '';
+      for (var oi = 0; oi < OS_SC.length; oi++) { if (String(OS_SC[oi].id) === id) { oq = OS_SC[oi]; oqType = 'sc'; break; } }
+      if (!oq) { for (var ti3 = 0; ti3 < OS_TF.length; ti3++) { if (String(OS_TF[ti3].id) === id) { oq = OS_TF[ti3]; oqType = 'tf'; break; } } }
+      if (oq) {
+        var typeLabel = (oqType === 'sc') ? '单选题' : '判断题';
+        h += '<div style="font-weight:600;margin-bottom:10px;font-size:14px;color:#333"><span style="background:#e3f2fd;color:#1565c0;padding:2px 8px;border-radius:8px;font-size:12px;margin-right:6px">' + typeLabel + '</span>' + eh(oq.q) + '</div>';
+        
+        if (oqType === 'sc') {
+          // Show all options, highlight correct one
+          h += '<div class="q-opts" style="margin-top:8px">';
+          for (var oi2 = 0; oi2 < oq.o.length; oi2++) {
+            var opt = oq.o[oi2];
+            var firstChar = opt.charAt(0);
+            var isCorrect = (firstChar === oq.a);
+            var cls = isCorrect ? ' correct' : '';
+            h += '<div class="q-opt' + cls + '">' + eh(opt) + '</div>';
+          }
+          h += '</div>';
+          // Show correct answer text
+          var rightText = '';
+          for (var ri = 0; ri < oq.o.length; ri++) {
+            if (oq.o[ri].charAt(0) === oq.a) { rightText = oq.o[ri]; break; }
+          }
+          h += '<div style="padding:8px 14px;background:#e8f5e9;border-radius:8px;color:#2e7d32;font-weight:600;font-size:14px;margin-top:8px">&#9989; 正确答案：' + eh(rightText) + '</div>';
+          // Show explanation
+          var expKey = 'sc_' + oq.id;
+          var exp = (typeof OS_EXP !== 'undefined') ? (OS_EXP[expKey] || '') : '';
+          if (exp) h += '<div style="padding:8px 14px;background:#eff6ff;border-radius:8px;color:#1e40af;font-size:13px;margin-top:6px">&#128161; 解析：' + eh(exp) + '</div>';
+        } else {
+          // True/False question
+          var tfAns = (oq.a === '\u221a') ? '\u221a 正确' : '\u00d7 错误';
+          h += '<div style="padding:8px 14px;background:#e8f5e9;border-radius:8px;color:#2e7d32;font-weight:600;font-size:14px;margin-top:8px">&#9989; 正确答案：' + tfAns + '</div>';
+          // Show explanation
+          var tfExpKey = 'tf_' + oq.id;
+          var tfExp = (typeof OS_EXP !== 'undefined') ? (OS_EXP[tfExpKey] || '') : '';
+          if (tfExp) h += '<div style="padding:8px 14px;background:#eff6ff;border-radius:8px;color:#1e40af;font-size:13px;margin-top:6px">&#128161; 解析：' + eh(tfExp) + '</div>';
+        }
+      }
+    }
+    h += '</div>';
+  }
+  C.innerHTML = h;
+}
+
+// ========== GitHub Gist 云同步 ==========
+var GIST_ID_KEY = 'exam_gist_id';
+var GIST_TOKEN_KEY = 'exam_gist_token';
+var GIST_FILENAME = 'exam_data.json';
+var GIST_DESC = '国开期末练习系统-数据备份';
+var _syncTimer = null;
+var _syncQueue = false;
+
+function getEl(id) { return document.getElementById(id); }
+
+// Show/hide UI based on token state
+function updateGistUI() {
+  var token = localStorage.getItem(GIST_TOKEN_KEY);
+  var gistId = localStorage.getItem(GIST_ID_KEY);
+  var dot = getEl('gistDot');
+  var label = getEl('gistLabel');
+  var input = getEl('gistTokenInput');
+  var btnConn = getEl('gistBtnConnect');
+  var btnClear = getEl('gistBtnClear');
+  if (token && gistId) {
+    dot.className = 'gist-dot on';
+    label.textContent = '云同步已连接';
+    input.style.display = 'none';
+    btnConn.style.display = 'none';
+    btnClear.style.display = '';
+    getEl('gistSyncTime').textContent = (localStorage.getItem('exam_last_sync') || '');
+    btnConn.className = 'gist-btn saved';
+  } else {
+    dot.className = 'gist-dot off';
+    label.textContent = '未连接云同步';
+    input.style.display = '';
+    btnConn.style.display = '';
+    btnClear.style.display = 'none';
+  }
+}
+
+function saveToken() {
+  var token = getEl('gistTokenInput').value.trim();
+  if (!token) { alert('请粘贴 GitHub Token'); return; }
+  // Basic validation: github_pat_ or ghp_
+  if (!token.match(/^(ghp_|github_pat_)/)) {
+    alert('Token 格式无效，应以 ghp_ 或 github_pat_ 开头');
+    return;
+  }
+  localStorage.setItem(GIST_TOKEN_KEY, token);
+  getEl('gistTokenInput').value = '';
+  var dot = getEl('gistDot');
+  var label = getEl('gistLabel');
+  dot.className = 'gist-dot syncing';
+  label.textContent = '正在连接...';
+  // Create gist or find existing
+  initGist(token);
+}
+
+function clearToken() {
+  localStorage.removeItem(GIST_TOKEN_KEY);
+  localStorage.removeItem(GIST_ID_KEY);
+  updateGistUI();
+}
+
+function initGist(token) {
+  // Try to find existing gist first
+  var gistId = localStorage.getItem(GIST_ID_KEY);
+  if (gistId) {
+    verifyAndSync(token, gistId);
+    return;
+  }
+  // Search for existing gist
+  apiGistList(token, function(gists) {
+    if (gists && gists.length > 0) {
+      for (var i = 0; i < gists.length; i++) {
+        if (gists[i].description === GIST_DESC) {
+          localStorage.setItem(GIST_ID_KEY, gists[i].id);
+          verifyAndSync(token, gists[i].id);
+          return;
+        }
+      }
+    }
+    // No existing gist, create one
+    createGist(token);
+  }, function() {
+    // Fallback: just create a new one
+    createGist(token);
+  });
+}
+
+function createGist(token) {
+  var data = gatherLocalData();
+  var payload = {
+    description: GIST_DESC,
+    public: false,
+    files: {}
+  };
+  payload.files[GIST_FILENAME] = { content: JSON.stringify(data) };
+  apiCall(token, 'POST', '/gists', payload, function(result) {
+    localStorage.setItem(GIST_ID_KEY, result.id);
+    getEl('gistDot').className = 'gist-dot on';
+    getEl('gistLabel').textContent = '云同步已连接';
+    updateGistUI();
+    updateSyncTime();
+  }, function(err) {
+    getEl('gistDot').className = 'gist-dot off';
+    getEl('gistLabel').textContent = '连接失败: ' + (err.message || '网络错误');
+    updateGistUI();
+  });
+}
+
+function verifyAndSync(token, gistId) {
+  apiCall(token, 'GET', '/gists/' + gistId, null, function(result) {
+    getEl('gistDot').className = 'gist-dot on';
+    getEl('gistLabel').textContent = '云同步已连接';
+    updateGistUI();
+    // Merge remote data
+    if (result.files && result.files[GIST_FILENAME]) {
+      try {
+        var remoteData = JSON.parse(result.files[GIST_FILENAME].content);
+        mergeData(remoteData);
+      } catch(e) { /* ignore parse error */ }
+    }
+    updateSyncTime();
+    // Push local data to ensure sync
+    scheduleSync();
+  }, function(err) {
+    getEl('gistDot').className = 'gist-dot off';
+    getEl('gistLabel').textContent = '同步失败: ' + (err.message || '网络错误');
+    updateGistUI();
+  });
+}
+
+function gatherLocalData() {
+  var exp = {};
+  var keys = ['exam_ds_records', 'exam_os_records', 'exam_turn', 'wb_ds', 'wb_os'];
+  for (var i = 0; i < keys.length; i++) {
+    var val = localStorage.getItem(keys[i]);
+    if (val) exp[keys[i]] = val;
+  }
+  return exp;
+}
+
+function mergeData(remote) {
+  if (!remote) return;
+  var keys = ['exam_ds_records', 'exam_os_records', 'exam_turn', 'wb_ds', 'wb_os'];
+  for (var i = 0; i < keys.length; i++) {
+    if (remote[keys[i]]) {
+      var local = localStorage.getItem(keys[i]);
+      // Only overwrite if remote is newer or local is empty
+      if (!local || remote[keys[i]].length > local.length) {
+        localStorage.setItem(keys[i], remote[keys[i]]);
+      }
+      // For exam_turn, use the larger number
+      if (keys[i] === 'exam_turn') {
+        var localTurn = parseInt(local) || 0;
+        var remoteTurn = parseInt(remote[keys[i]]) || 0;
+        localStorage.setItem('exam_turn', Math.max(localTurn, remoteTurn));
+      }
+    }
+  }
+}
+
+function scheduleSync() {
+  if (_syncTimer) clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(doSync, 2000);
+}
+
+function triggerSync() {
+  _syncQueue = true;
+  scheduleSync();
+}
+
+function doSync() {
+  var token = localStorage.getItem(GIST_TOKEN_KEY);
+  var gistId = localStorage.getItem(GIST_ID_KEY);
+  if (!token || !gistId) return;
+  var dot = getEl('gistDot');
+  var label = getEl('gistLabel');
+  dot.className = 'gist-dot syncing';
+  label.textContent = '同步中...';
+  var data = gatherLocalData();
+  var payload = {
+    description: GIST_DESC,
+    files: {}
+  };
+  payload.files[GIST_FILENAME] = { content: JSON.stringify(data) };
+  apiCall(token, 'PATCH', '/gists/' + gistId, payload, function() {
+    dot.className = 'gist-dot on';
+    label.textContent = '云同步已连接';
+    updateSyncTime();
+  }, function(err) {
+    dot.className = 'gist-dot on';
+    label.textContent = '同步失败: ' + (err.message || '网络错误');
+    // Retry later
+    setTimeout(doSync, 30000);
+  });
+}
+
+function updateSyncTime() {
+  var now = new Date();
+  var ts = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0') + ':' + now.getSeconds().toString().padStart(2,'0');
+  localStorage.setItem('exam_last_sync', ts);
+  if (getEl('gistSyncTime')) getEl('gistSyncTime').textContent = ts;
+}
+
+// API helpers
+function apiCall(token, method, path, body, onSuccess, onError) {
+  var xhr = new XMLHttpRequest();
+  xhr.open(method, 'https://api.github.com' + path, true);
+  xhr.setRequestHeader('Authorization', 'token ' + token);
+  xhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try { onSuccess && onSuccess(JSON.parse(xhr.responseText)); }
+        catch(e) { onSuccess && onSuccess({}); }
+      } else {
+        var errMsg = 'HTTP ' + xhr.status;
+        try { var e = JSON.parse(xhr.responseText); errMsg = e.message || errMsg; } catch(_) {}
+        onError && onError({message: errMsg});
+      }
+    }
+  };
+  if (body) {
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send(JSON.stringify(body));
+  } else {
+    xhr.send();
+  }
+}
+
+function apiGistList(token, onSuccess, onError) {
+  apiCall(token, 'GET', '/gists?per_page=100', null, onSuccess, onError);
+}
+
+// Hook localStorage.setItem for auto-sync
+(function() {
+  var _origSet = localStorage.setItem;
+  localStorage.setItem = function(key, value) {
+    _origSet.call(localStorage, key, value);
+    var syncKeys = ['exam_ds_records', 'exam_os_records', 'exam_turn', 'wb_ds', 'wb_os'];
+    if (syncKeys.indexOf(key) >= 0) {
+      triggerSync();
+    }
+  };
+
+  var _origRemove = localStorage.removeItem;
+  localStorage.removeItem = function(key) {
+    _origRemove.call(localStorage, key);
+    var syncKeys = ['exam_ds_records', 'exam_os_records', 'exam_turn', 'wb_ds', 'wb_os'];
+    if (syncKeys.indexOf(key) >= 0) {
+      triggerSync();
+    }
+  };
+})();
+
+// ========== 初始化 ==========
+document.addEventListener('DOMContentLoaded', function() {
+  switchTab(0);
+  updateGistUI();
+  // Auto-sync on load if token exists
+  var token = localStorage.getItem(GIST_TOKEN_KEY);
+  var gistId = localStorage.getItem(GIST_ID_KEY);
+  if (token && gistId) {
+    verifyAndSync(token, gistId);
+  }
+});
+</script>
+</body>
+</html>
