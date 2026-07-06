@@ -118,6 +118,7 @@ body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;background:linear-gradi
     <div style="display:flex;align-items:center;gap:6px">
       <input class="gist-input" id="gistTokenInput" type="password" placeholder="粘贴 GitHub Token..." />
       <button class="gist-btn" onclick="saveToken()" id="gistBtnConnect">连接</button>
+      <button class="gist-btn" onclick="forceSync()" style="display:none" id="gistBtnSync">立即同步</button>
       <button class="gist-btn" onclick="clearToken()" style="display:none" id="gistBtnClear">断开</button>
       <span id="gistSyncTime" style="font-size:10px;color:#aaa"></span>
     </div>
@@ -4817,7 +4818,9 @@ var GIST_TOKEN_KEY = 'exam_gist_token';
 var GIST_FILENAME = 'exam_data.json';
 var GIST_DESC = '国开期末练习系统-数据备份';
 var _syncTimer = null;
-var _syncQueue = false;
+var _lastPushAt = 0;           // unix ms of last successful push
+var _pushMinInterval = 3600000; // 最小推送间隔：1 小时
+var _pushing = false;
 
 function getEl(id) { return document.getElementById(id); }
 
@@ -4829,12 +4832,14 @@ function updateGistUI() {
   var label = getEl('gistLabel');
   var input = getEl('gistTokenInput');
   var btnConn = getEl('gistBtnConnect');
+  var btnSync = getEl('gistBtnSync');
   var btnClear = getEl('gistBtnClear');
   if (token && gistId) {
     dot.className = 'gist-dot on';
     label.textContent = '云同步已连接';
     input.style.display = 'none';
     btnConn.style.display = 'none';
+    btnSync.style.display = '';
     btnClear.style.display = '';
     getEl('gistSyncTime').textContent = (localStorage.getItem('exam_last_sync') || '');
     btnConn.className = 'gist-btn saved';
@@ -4843,6 +4848,7 @@ function updateGistUI() {
     label.textContent = '未连接云同步';
     input.style.display = '';
     btnConn.style.display = '';
+    btnSync.style.display = 'none';
     btnClear.style.display = 'none';
   }
 }
@@ -4919,27 +4925,18 @@ function createGist(token) {
 }
 
 function verifyAndSync(token, gistId) {
-  apiCall(token, 'GET', '/gists/' + gistId, null, function(result) {
-    getEl('gistDot').className = 'gist-dot on';
-    getEl('gistLabel').textContent = '云同步已连接';
+  var dot = getEl('gistDot');
+  var label = getEl('gistLabel');
+  dot.className = 'gist-dot syncing';
+  label.textContent = '正在同步...';
+  updateGistUI();
+  pullAndPush(token, gistId, function() {
+    dot.className = 'gist-dot on';
+    label.textContent = '云同步已连接';
     updateGistUI();
-    // Merge remote data
-    var hadRemote = false;
-    if (result.files && result.files[GIST_FILENAME]) {
-      try {
-        var remoteData = JSON.parse(result.files[GIST_FILENAME].content);
-        mergeData(remoteData);
-        hadRemote = true;
-      } catch(e) { /* ignore parse error */ }
-    }
-    updateSyncTime();
-    // Re-render current view so user sees synced data
-    if (hadRemote) switchTab(curTab);
-    // Push local data to ensure sync
-    scheduleSync();
   }, function(err) {
-    getEl('gistDot').className = 'gist-dot off';
-    getEl('gistLabel').textContent = '同步失败: ' + (err.message || '网络错误');
+    dot.className = 'gist-dot off';
+    label.textContent = '同步失败: ' + (err.message || '网络错误');
     updateGistUI();
   });
 }
@@ -5005,34 +5002,93 @@ function mergeData(remote) {
   }
 }
 
-function scheduleSync() {
+// --- 防抖调度：做题写 localStorage 后延迟触发一次推送 ---
+function schedulePush() {
   if (_syncTimer) clearTimeout(_syncTimer);
-  _syncTimer = setTimeout(doSync, 2000);
+  _syncTimer = setTimeout(tryPush, 5000); // 做完题后等 5 秒无新写入再推送
 }
 
-function triggerSync() {
-  _syncQueue = true;
-  scheduleSync();
+function canPush() {
+  var now = Date.now();
+  return (now - _lastPushAt) >= _pushMinInterval;
 }
 
-function doSync() {
+// 尝试推送（受一小时限制）
+function tryPush() {
   var token = localStorage.getItem(GIST_TOKEN_KEY);
   var gistId = localStorage.getItem(GIST_ID_KEY);
   if (!token || !gistId) return;
+  if (!canPush()) return; // 不到一小时，跳过
+  if (_pushing) return;
+  doPush(token, gistId, function() {}); // silent push
+}
+
+// 手动同步（不受一小时限制，先拉后推）
+function forceSync() {
+  var token = localStorage.getItem(GIST_TOKEN_KEY);
+  var gistId = localStorage.getItem(GIST_ID_KEY);
+  if (!token || !gistId) { alert('请先连接云同步'); return; }
+  if (_pushing) return;
   var dot = getEl('gistDot');
   var label = getEl('gistLabel');
   dot.className = 'gist-dot syncing';
-  label.textContent = '同步中...';
+  label.textContent = '正在同步...';
+  pullAndPush(token, gistId, function() {
+    dot.className = 'gist-dot on';
+    label.textContent = '云同步已连接';
+  }, function(err) {
+    dot.className = 'gist-dot on';
+    label.textContent = '同步失败: ' + (err.message || '网络错误');
+  });
+}
 
-  // Step 1: Pull latest from Gist first (prevent overwriting other device's data)
+// --- 核心推送（仅推送，不拉取） ---
+function doPush(token, gistId, callback) {
+  _pushing = true;
+  var dot = getEl('gistDot');
+  var label = getEl('gistLabel');
+  dot.className = 'gist-dot syncing';
+  label.textContent = '推送中...';
+  var data = gatherLocalData();
+  var payload = {
+    description: GIST_DESC,
+    files: {}
+  };
+  payload.files[GIST_FILENAME] = { content: JSON.stringify(data) };
+  apiCall(token, 'PATCH', '/gists/' + gistId, payload, function() {
+    _lastPushAt = Date.now();
+    _pushing = false;
+    dot.className = 'gist-dot on';
+    label.textContent = '云同步已连接';
+    updateSyncTime();
+    callback();
+  }, function(err) {
+    _pushing = false;
+    dot.className = 'gist-dot on';
+    label.textContent = '推送失败: ' + (err.message || '网络错误');
+    // 403/429 rate limit → 等 1 小时后重试
+    if (err.message && err.message.indexOf('403') >= 0) {
+      _lastPushAt = Date.now(); // 假装刚推送过，避免无限重试
+    }
+    callback();
+  });
+}
+
+// --- 先拉取再推送（用于页面加载和手动同步） ---
+function pullAndPush(token, gistId, onDone, onError) {
+  _pushing = true;
   apiCall(token, 'GET', '/gists/' + gistId, null, function(result) {
+    var hadRemote = false;
     if (result.files && result.files[GIST_FILENAME]) {
       try {
         var remoteData = JSON.parse(result.files[GIST_FILENAME].content);
         mergeData(remoteData);
-      } catch(e) { /* ignore parse error */ }
+        hadRemote = true;
+      } catch(e) {}
     }
-    // Step 2: Push merged data back
+    // Re-render if remote data was merged
+    if (hadRemote) switchTab(curTab);
+    // Then push
     var data = gatherLocalData();
     var payload = {
       description: GIST_DESC,
@@ -5040,18 +5096,17 @@ function doSync() {
     };
     payload.files[GIST_FILENAME] = { content: JSON.stringify(data) };
     apiCall(token, 'PATCH', '/gists/' + gistId, payload, function() {
-      dot.className = 'gist-dot on';
-      label.textContent = '云同步已连接';
+      _lastPushAt = Date.now();
+      _pushing = false;
       updateSyncTime();
+      if (onDone) onDone();
     }, function(err) {
-      dot.className = 'gist-dot on';
-      label.textContent = '推送失败: ' + (err.message || '网络错误');
-      setTimeout(doSync, 30000);
+      _pushing = false;
+      if (onDone) onDone();
     });
   }, function(err) {
-    dot.className = 'gist-dot on';
-    label.textContent = '拉取失败: ' + (err.message || '网络错误');
-    setTimeout(doSync, 30000);
+    _pushing = false;
+    if (onError) onError(err);
   });
 }
 
@@ -5092,21 +5147,13 @@ function apiGistList(token, onSuccess, onError) {
   apiCall(token, 'GET', '/gists?per_page=100', null, onSuccess, onError);
 }
 
-// Hook localStorage.setItem for auto-sync
+// 做题后写入 localStorage 时触发延迟推送（受 1 小时间隔限制）
 (function() {
   var _origSet = localStorage.setItem;
   localStorage.setItem = function(key, value) {
     _origSet.call(localStorage, key, value);
     if (SYNC_KEYS.indexOf(key) >= 0) {
-      triggerSync();
-    }
-  };
-
-  var _origRemove = localStorage.removeItem;
-  localStorage.removeItem = function(key) {
-    _origRemove.call(localStorage, key);
-    if (SYNC_KEYS.indexOf(key) >= 0) {
-      triggerSync();
+      schedulePush();
     }
   };
 })();
