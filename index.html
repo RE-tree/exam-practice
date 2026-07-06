@@ -4924,13 +4924,17 @@ function verifyAndSync(token, gistId) {
     getEl('gistLabel').textContent = '云同步已连接';
     updateGistUI();
     // Merge remote data
+    var hadRemote = false;
     if (result.files && result.files[GIST_FILENAME]) {
       try {
         var remoteData = JSON.parse(result.files[GIST_FILENAME].content);
         mergeData(remoteData);
+        hadRemote = true;
       } catch(e) { /* ignore parse error */ }
     }
     updateSyncTime();
+    // Re-render current view so user sees synced data
+    if (hadRemote) switchTab(curTab);
     // Push local data to ensure sync
     scheduleSync();
   }, function(err) {
@@ -4940,29 +4944,30 @@ function verifyAndSync(token, gistId) {
   });
 }
 
+// Real keys used by the exam system: ds_wk, os_wk, ds_tested, os_tested, ds_round, os_round
+var SYNC_KEYS = ['ds_wk', 'os_wk', 'ds_tested', 'os_tested', 'ds_round', 'os_round'];
+
 function gatherLocalData() {
   var exp = {};
-  var keys = ['exam_ds_records', 'exam_os_records', 'exam_turn', 'wb_ds', 'wb_os'];
-  for (var i = 0; i < keys.length; i++) {
-    var val = localStorage.getItem(keys[i]);
-    if (val) exp[keys[i]] = val;
+  for (var i = 0; i < SYNC_KEYS.length; i++) {
+    var val = localStorage.getItem(SYNC_KEYS[i]);
+    if (val) exp[SYNC_KEYS[i]] = val;
   }
   return exp;
 }
 
 function mergeData(remote) {
   if (!remote) return;
-  var keys = ['exam_ds_records', 'exam_os_records', 'exam_turn', 'wb_ds', 'wb_os'];
-  for (var i = 0; i < keys.length; i++) {
-    var k = keys[i];
+  for (var i = 0; i < SYNC_KEYS.length; i++) {
+    var k = SYNC_KEYS[i];
     if (!remote[k]) continue;
     var local = localStorage.getItem(k);
 
-    // exam_turn: always use the larger number
-    if (k === 'exam_turn') {
-      var localTurn = parseInt(local) || 0;
-      var remoteTurn = parseInt(remote[k]) || 0;
-      localStorage.setItem(k, '' + Math.max(localTurn, remoteTurn));
+    // Round numbers: use the larger one
+    if (k === 'ds_round' || k === 'os_round') {
+      var localNum = parseInt(local) || 0;
+      var remoteNum = parseInt(remote[k]) || 0;
+      localStorage.setItem(k, '' + Math.max(localNum, remoteNum));
       continue;
     }
 
@@ -4972,7 +4977,7 @@ function mergeData(remote) {
       continue;
     }
 
-    // Try JSON array union merge for wb_*/exam_*_records
+    // Try JSON array union merge for wb (wrong book) and tested arrays
     try {
       var localArr = JSON.parse(local);
       var remoteArr = JSON.parse(remote[k]);
@@ -4980,11 +4985,11 @@ function mergeData(remote) {
         var merged = localArr.slice();
         var seen = {};
         for (var j = 0; j < localArr.length; j++) {
-          var key = localArr[j].uid || localArr[j].id || JSON.stringify(localArr[j]);
+          var key = localArr[j].uid || localArr[j].id || localArr[j].q || JSON.stringify(localArr[j]);
           seen[key] = true;
         }
         for (var j = 0; j < remoteArr.length; j++) {
-          var rkey = remoteArr[j].uid || remoteArr[j].id || JSON.stringify(remoteArr[j]);
+          var rkey = remoteArr[j].uid || remoteArr[j].id || remoteArr[j].q || JSON.stringify(remoteArr[j]);
           if (!seen[rkey]) {
             merged.push(remoteArr[j]);
             seen[rkey] = true;
@@ -5092,8 +5097,7 @@ function apiGistList(token, onSuccess, onError) {
   var _origSet = localStorage.setItem;
   localStorage.setItem = function(key, value) {
     _origSet.call(localStorage, key, value);
-    var syncKeys = ['exam_ds_records', 'exam_os_records', 'exam_turn', 'wb_ds', 'wb_os'];
-    if (syncKeys.indexOf(key) >= 0) {
+    if (SYNC_KEYS.indexOf(key) >= 0) {
       triggerSync();
     }
   };
@@ -5101,8 +5105,7 @@ function apiGistList(token, onSuccess, onError) {
   var _origRemove = localStorage.removeItem;
   localStorage.removeItem = function(key) {
     _origRemove.call(localStorage, key);
-    var syncKeys = ['exam_ds_records', 'exam_os_records', 'exam_turn', 'wb_ds', 'wb_os'];
-    if (syncKeys.indexOf(key) >= 0) {
+    if (SYNC_KEYS.indexOf(key) >= 0) {
       triggerSync();
     }
   };
