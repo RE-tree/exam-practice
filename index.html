@@ -4275,7 +4275,7 @@ function renderStart(C) {
     h += '<div class="sc"><div class="sn" style="color:#e65100">' + wrongKeys.length + '</div><div class="sl">错题数</div></div>';
     h += '<div class="sc"><div class="sn" style="color:#1976d2">' + examRound + '</div><div class="sl">已考轮次</div></div>';
     h += '</div>';
-    h += '<p style="text-align:center;color:#666;margin:16px 0;font-size:14px">每轮随机抽取 15 道有答案的单选题，优先抽取你的错题</p>';
+    h += '<p style="text-align:center;color:#666;margin:16px 0;font-size:14px">每轮随机抽取 15 道有答案的单选题，其中最多 5 道错题（随机选取），答对的错题自动移除</p>';
     h += '<div class="btn-row"><button class="btn btn-pri" onclick="startDS()" style="padding:14px 48px;font-size:16px">&#9999; 开始考试</button></div>';
     C.innerHTML = h;
   } else {
@@ -4299,7 +4299,7 @@ function renderStart(C) {
     h += '<div class="sc"><div class="sn" style="color:#e65100">' + wKeys.length + '</div><div class="sl">错题数</div></div>';
     h += '<div class="sc"><div class="sn" style="color:#1976d2">' + examRound + '</div><div class="sl">已考轮次</div></div>';
     h += '</div>';
-    h += '<p style="text-align:center;color:#666;margin:16px 0;font-size:14px">每轮随机抽取 15 题（单选+判断），优先抽取错题</p>';
+    h += '<p style="text-align:center;color:#666;margin:16px 0;font-size:14px">每轮随机抽取 15 题（单选+判断），其中最多 5 道错题（随机选取），答对的错题自动移除</p>';
     h += '<div class="btn-row"><button class="btn btn-pri" onclick="startOS()" style="padding:14px 48px;font-size:16px;background:linear-gradient(135deg,#43a047,#2e7d32)">&#9999; 开始考试</button></div>';
     C.innerHTML = h;
   }
@@ -4316,19 +4316,22 @@ function startDS() {
   }
   var wb = getWB();
   var wkKeys = Object.keys(wb);
-  // 优先抽错题
-  var pool = [];
-  var used = {};
+  // 最多抽 5 道错题，先打乱再选
+  var wqList = [];
   for (var wi = 0; wi < wkKeys.length; wi++) {
     var wid = wkKeys[wi];
     for (var fi = 0; fi < okList.length; fi++) {
-      if (okList[fi].uid === wid && !used[wid]) {
-        pool.push(okList[fi]);
-        used[wid] = 1;
-        break;
-      }
+      if (okList[fi].uid === wid) { wqList.push(okList[fi]); break; }
     }
   }
+  for (var wsi = wqList.length - 1; wsi > 0; wsi--) {
+    var wsj = Math.floor(Math.random() * (wsi + 1));
+    var wtmp = wqList[wsi]; wqList[wsi] = wqList[wsj]; wqList[wsj] = wtmp;
+  }
+  var maxWQ = Math.min(5, wqList.length);
+  var pool = [];
+  var used = {};
+  for (var wi2 = 0; wi2 < maxWQ; wi2++) { pool.push(wqList[wi2]); used[wqList[wi2].uid] = 1; }
   // 补充随机
   var rest = [];
   for (var ri = 0; ri < okList.length; ri++) {
@@ -4439,7 +4442,11 @@ function dsSel(uid, i) {
   var correctIdx = (ai.option_index !== null && ai.option_index !== undefined) ? ai.option_index : q.correct_option_index;
   var isCorrect = (i === correctIdx);
   qCorrect[uid] = isCorrect;
-  if (isCorrect) { correctCount++; }
+  if (isCorrect) {
+    correctCount++;
+    var wb = getWB();
+    if (wb[uid]) { delete wb[uid]; saveWB(wb); }
+  }
   else {
     var wb = getWB();
     if (!wb[uid]) wb[uid] = {count:0, quiz_index: q.quiz_index};
@@ -4486,19 +4493,22 @@ function startOS() {
   for (var tfi = 0; tfi < OS_TF.length; tfi++) { all.push({id: OS_TF[tfi].id, type: 'tf'}); }
   var wb = getWB();
   var wk = Object.keys(wb);
-  var pool = [];
-  var used = {};
-  // 优先错题
+  // 最多抽 5 道错题，先打乱再选
+  var wqList = [];
   for (var wki = 0; wki < wk.length; wki++) {
     var wid = wk[wki];
     for (var ai = 0; ai < all.length; ai++) {
-      if (String(all[ai].id) === wid && !used[wid]) {
-        pool.push(all[ai]);
-        used[wid] = 1;
-        break;
-      }
+      if (String(all[ai].id) === wid) { wqList.push(all[ai]); break; }
     }
   }
+  for (var wsi = wqList.length - 1; wsi > 0; wsi--) {
+    var wsj = Math.floor(Math.random() * (wsi + 1));
+    var wtmp = wqList[wsi]; wqList[wsi] = wqList[wsj]; wqList[wsj] = wtmp;
+  }
+  var maxWQ = Math.min(5, wqList.length);
+  var pool = [];
+  var used = {};
+  for (var wi2 = 0; wi2 < maxWQ; wi2++) { pool.push(wqList[wi2]); used[String(wqList[wi2].id)] = 1; }
   // 补充随机
   var rest = [];
   for (var ar = 0; ar < all.length; ar++) {
@@ -4637,7 +4647,11 @@ function osSelSC(el) {
   var q = getOSQuestion(eq.id, eq.type);
   var isCorrect = (L === q.a);
   qCorrect[id] = isCorrect;
-  if (isCorrect) { correctCount++; }
+  if (isCorrect) {
+    correctCount++;
+    var wb = getWB();
+    if (wb[id]) { delete wb[id]; saveWB(wb); }
+  }
   else {
     var wb = getWB();
     if (!wb[id]) wb[id] = {count:0, type: eq.type};
@@ -4656,7 +4670,11 @@ function osSelTF(el) {
   var q = getOSQuestion(eq.id, eq.type);
   var isCorrect = (v === q.a);
   qCorrect[id] = isCorrect;
-  if (isCorrect) { correctCount++; }
+  if (isCorrect) {
+    correctCount++;
+    var wb = getWB();
+    if (wb[id]) { delete wb[id]; saveWB(wb); }
+  }
   else {
     var wb = getWB();
     if (!wb[id]) wb[id] = {count:0, type: eq.type};
