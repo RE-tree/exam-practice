@@ -4234,10 +4234,9 @@ function renderOS_RefType(t, btn) {
       }
       h += '</div><div class="mr">';
       for (var ri = 0; ri < m.right.length; ri++) {
-        var ansLetter = m.a[ri];
+        var ansLetter = String(ri + 1); // right[ri] 对应 left[ri]，即第(ri+1)项
         var letters = 'ABCDE';
         var letterLabel = letters[ri] || '?';
-        var isCorrectAns = true; // always show answer
         h += '<div class="mi correct">' + ansLetter + '-' + letterLabel + '. ' + eh(m.right[ri]) + '</div>';
       }
       h += '</div></div></div>';
@@ -4723,20 +4722,38 @@ function submitOS() {
 // --- 操作系统配伍题考试 ---
 function startOS_MT() {
   var mtList = [];
+  var letters = 'ABCDE';
   for (var gi = 0; gi < OS_MT.length; gi++) {
     var m = OS_MT[gi];
     for (var li = 0; li < m.left.length; li++) {
+      // 每道题独立打乱选项顺序，正确答案是 right[li]（right[i]对应left[i]）
+      var opts = [];
+      for (var ri = 0; ri < m.right.length; ri++) {
+        opts.push({text: m.right[ri], origIdx: ri});
+      }
+      // Fisher-Yates 打乱选项
+      for (var si = opts.length - 1; si > 0; si--) {
+        var sj = Math.floor(Math.random() * (si + 1));
+        var tmp = opts[si]; opts[si] = opts[sj]; opts[sj] = tmp;
+      }
+      // 找到正确选项（origIdx === li）打乱后的位置，计算答案字母
+      var ansLetter = '';
+      var optTexts = [];
+      for (var oi = 0; oi < opts.length; oi++) {
+        optTexts.push(opts[oi].text);
+        if (opts[oi].origIdx === li) ansLetter = letters[oi];
+      }
       mtList.push({
         mtId: 'mt_' + m.id + '_' + li,
         groupId: m.id,
-        groupLabel: '\u914d\u4f0d\u7b2c' + m.id + '\u7ec4',
+        groupLabel: '配伍第' + m.id + '组',
         leftText: m.left[li],
-        rightOptions: m.right,
-        answer: m.a[li]
+        rightOptions: optTexts,
+        answer: ansLetter
       });
     }
   }
-  // Fisher-Yates shuffle
+  // Fisher-Yates shuffle 题目顺序
   for (var si = mtList.length - 1; si > 0; si--) {
     var sj = Math.floor(Math.random() * (si + 1));
     var tmp = mtList[si]; mtList[si] = mtList[sj]; mtList[sj] = tmp;
@@ -4943,9 +4960,10 @@ function renderAna(C) {
         for (var mtm = 0; mtm < OS_MT.length; mtm++) {
           if (OS_MT[mtm].id === mtG) {
             oqType = 'mt';
-            var mtAnsLetter = OS_MT[mtm].a[mtI];
-            var mtAnsIdx = mtAnsLetter.charCodeAt(0) - 65;
-            h += '<div style="font-weight:600;margin-bottom:10px;font-size:14px;color:#333"><span style="background:#f3e5f5;color:#7b1fa2;padding:2px 8px;border-radius:8px;font-size:12px;margin-right:6px">\u914d\u4f0d\u9898</span>\u3010\u914d\u4f0d\u7b2c' + mtG + '\u7ec4\u3011' + eh(OS_MT[mtm].left[mtI]) + ' \u2192 ?</div>';
+            // right[mtI] 是 left[mtI] 的正确匹配，不用 a 数组
+            var mtAnsIdx = mtI;
+            var mtAnsLetter = 'ABCDE'[mtI];
+            h += '<div style="font-weight:600;margin-bottom:10px;font-size:14px;color:#333"><span style="background:#f3e5f5;color:#7b1fa2;padding:2px 8px;border-radius:8px;font-size:12px;margin-right:6px">配伍题</span>【配伍第' + mtG + '组】' + eh(OS_MT[mtm].left[mtI]) + ' → ?</div>';
             h += '<div class="q-opts" style="margin-top:8px">';
             for (var moi = 0; moi < OS_MT[mtm].right.length; moi++) {
               var mtL = 'ABCDE'[moi];
@@ -4953,7 +4971,7 @@ function renderAna(C) {
               h += '<div class="q-opt' + mtCls + '">' + mtL + '. ' + eh(OS_MT[mtm].right[moi]) + '</div>';
             }
             h += '</div>';
-            h += '<div style="padding:8px 14px;background:#e8f5e9;border-radius:8px;color:#2e7d32;font-weight:600;font-size:14px;margin-top:8px">&#9989; \u6b63\u786e\u7b54\u6848\uff1a' + mtAnsLetter + '. ' + eh(OS_MT[mtm].right[mtAnsIdx] || '') + '</div>';
+            h += '<div style="padding:8px 14px;background:#e8f5e9;border-radius:8px;color:#2e7d32;font-weight:600;font-size:14px;margin-top:8px">&#9989; 正确答案：' + mtAnsLetter + '. ' + eh(OS_MT[mtm].right[mtAnsIdx] || '') + '</div>';
             oq = true;
             break;
           }
