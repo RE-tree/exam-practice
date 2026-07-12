@@ -4058,6 +4058,7 @@ var curCourse = 'ds';
 var curTab = 0;
 var examQs = [], examIdx = 0, examAns = {}, examDone = false, examRound = 0;
 var qAnswered = {}, qCorrect = {}, correctCount = 0;
+var examMode = 'normal';
 
 function WK() { return curCourse + '_wk'; }
 
@@ -4250,6 +4251,7 @@ function renderStart(C) {
   // 防御性重置：清空上一轮考试的作答状态
   examQs = []; examIdx = 0; examAns = {}; examDone = false;
   qAnswered = {}; qCorrect = {}; correctCount = 0;
+  examMode = 'normal';
   examRound = parseInt(localStorage.getItem(curCourse + '_round') || '0');
   if (curCourse === 'ds') {
     var dsOkCount = 0;
@@ -4301,6 +4303,9 @@ function renderStart(C) {
     h += '</div>';
     h += '<p style="text-align:center;color:#666;margin:16px 0;font-size:14px">每轮随机抽取 15 题（单选+判断），其中最多 5 道错题（随机选取），答对的错题自动移除</p>';
     h += '<div class="btn-row"><button class="btn btn-pri" onclick="startOS()" style="padding:14px 48px;font-size:16px;background:linear-gradient(135deg,#43a047,#2e7d32)">&#9999; 开始考试</button></div>';
+    h += '<div style="text-align:center;margin:14px 0 8px;font-size:13px;color:#999">—— 或 ——</div>';
+    h += '<div class="btn-row"><button class="btn btn-pri" onclick="startOS_MT()" style="padding:12px 40px;font-size:15px;background:linear-gradient(135deg,#8e24aa,#6a1b9a)">&#128279; 配伍题专项测验</button></div>';
+    h += '<p style="text-align:center;color:#999;margin:8px 0 0;font-size:13px">共 ' + OS_MT.length + ' 组配伍题，每组5题，随机抽取15题</p>';
     C.innerHTML = h;
   }
 }
@@ -4715,6 +4720,139 @@ function submitOS() {
   C.innerHTML = h;
 }
 
+// --- 操作系统配伍题考试 ---
+function startOS_MT() {
+  var mtList = [];
+  for (var gi = 0; gi < OS_MT.length; gi++) {
+    var m = OS_MT[gi];
+    for (var li = 0; li < m.left.length; li++) {
+      mtList.push({
+        mtId: 'mt_' + m.id + '_' + li,
+        groupId: m.id,
+        groupLabel: '\u914d\u4f0d\u7b2c' + m.id + '\u7ec4',
+        leftText: m.left[li],
+        rightOptions: m.right,
+        answer: m.a[li]
+      });
+    }
+  }
+  // Fisher-Yates shuffle
+  for (var si = mtList.length - 1; si > 0; si--) {
+    var sj = Math.floor(Math.random() * (si + 1));
+    var tmp = mtList[si]; mtList[si] = mtList[sj]; mtList[sj] = tmp;
+  }
+  examQs = mtList.slice(0, Math.min(15, mtList.length));
+  examIdx = 0;
+  examAns = {};
+  examDone = false;
+  examMode = 'mt';
+  qAnswered = {}; qCorrect = {}; correctCount = 0;
+  examRound++;
+  localStorage.setItem(curCourse + '_round', examRound);
+  renderOS_MT_Q();
+}
+
+function renderOS_MT_Q() {
+  var C = document.getElementById('content');
+  if (examIdx >= examQs.length) { submitOS_MT(); return; }
+  var q = examQs[examIdx];
+  var total = examQs.length;
+  var answered = Object.keys(qAnswered).length;
+  var isAnswered = !!qAnswered[q.mtId];
+  var letters = 'ABCDE';
+
+  var h = '<div class="exam-hd"><span>\u914d\u4f0d\u9898\u6d4b\u9a8c \u00b7 \u7b2c ' + examRound + ' \u8f6e \u00b7 \u7b2c ' + (examIdx+1) + ' \u9898 / \u5171 ' + total + ' \u9898 \u00b7 \u5df2\u7b54\u5bf9 ' + correctCount + ' \u9898</span>';
+  h += '<div class="exam-pg"><div style="display:flex;justify-content:space-between;font-size:13px;color:#666"><span>\u5df2\u4f5c\u7b54 ' + answered + '/' + total + '</span></div>';
+  h += '<div class="exam-pg-bar"><div class="exam-pg-fill" style="width:' + Math.round(answered/total*100) + '%"></div></div></div>';
+  h += '<button class="btn btn-sec" onclick="switchTab(1)">\u9000\u51fa\u8003\u8bd5</button></div>';
+
+  h += '<div class="exam-q"><div style="margin-bottom:14px"><span style="background:#ce93d8;color:#333;padding:3px 12px;border-radius:12px;font-size:12px;font-weight:600">' + eh(q.groupLabel) + '</span></div>';
+  h += '<div style="font-size:15px;color:#333;margin-bottom:18px;line-height:1.7">\u4e0b\u5217\u54ea\u9879\u4e0e \u201c' + eh(q.leftText) + '\u201d \u76f8\u5339\u914d\uff1f</div>';
+
+  h += '<div class="exam-opts">';
+  for (var oi = 0; oi < q.rightOptions.length; oi++) {
+    var L = letters[oi];
+    var sel = (examAns[q.mtId] === L);
+    var cls = 'exam-opt';
+    if (isAnswered) {
+      if (L === q.answer) cls += ' correct';
+      else if (sel) cls += ' wrong';
+    } else if (sel) {
+      cls += ' selected';
+    }
+    var clickAttr = isAnswered ? ' style="cursor:default"' : (' data-qid="' + q.mtId + '" data-val="' + L + '" onclick="mtSel(this)"');
+    h += '<div class="' + cls + '"' + clickAttr + '><span class="ol">' + L + '</span><span>' + eh(q.rightOptions[oi]) + '</span></div>';
+  }
+  h += '</div>';
+
+  if (isAnswered) {
+    var isCorr = qCorrect[q.mtId];
+    var bg = isCorr ? '#e8f5e9' : '#ffebee';
+    var fg = isCorr ? '#2e7d32' : '#c62828';
+    var msg = isCorr ? '&#9989; \u56de\u7b54\u6b63\u786e\uff01' : '&#10060; \u56de\u7b54\u9519\u8bef\uff01';
+    h += '<div style="margin-top:16px;padding:12px 16px;border-radius:8px;background:' + bg + ';color:' + fg + ';font-weight:600;font-size:14px">' + msg;
+    if (!isCorr) {
+      var ansIdx = q.answer.charCodeAt(0) - 65;
+      h += ' \u6b63\u786e\u7b54\u6848\uff1a' + q.answer + '. ' + eh(q.rightOptions[ansIdx] || '');
+    }
+    h += '</div>';
+  }
+
+  h += '</div>';
+
+  h += '<div class="btn-row">';
+  if (examIdx > 0) h += '<button class="btn btn-sec" onclick="mtPrev()">&#8592; \u4e0a\u4e00\u9898</button>';
+  if (examIdx === total - 1) {
+    if (isAnswered) h += '<button class="btn btn-pri" onclick="submitOS_MT()">&#9989; \u67e5\u770b\u6210\u7ee9</button>';
+    else h += '<button class="btn btn-pri" disabled>\u8bf7\u5148\u4f5c\u7b54</button>';
+  } else {
+    h += '<button class="btn btn-pri" onclick="mtNext()">\u4e0b\u4e00\u9898 &#8594;</button>';
+  }
+  h += '</div>';
+  C.innerHTML = h;
+}
+
+function mtSel(el) {
+  var id = el.getAttribute('data-qid');
+  if (qAnswered[id]) return;
+  var L = el.getAttribute('data-val');
+  examAns[id] = L;
+  qAnswered[id] = true;
+  var q = examQs[examIdx];
+  var isCorrect = (L === q.answer);
+  qCorrect[id] = isCorrect;
+  if (isCorrect) {
+    correctCount++;
+    var wb = getWB();
+    if (wb[id]) { delete wb[id]; saveWB(wb); }
+  } else {
+    var wb = getWB();
+    if (!wb[id]) wb[id] = {count:0, type: 'mt'};
+    wb[id].count++;
+    saveWB(wb);
+  }
+  renderOS_MT_Q();
+}
+
+function mtNext() { if (examIdx < examQs.length - 1) { examIdx++; renderOS_MT_Q(); } }
+function mtPrev() { if (examIdx > 0) { examIdx--; renderOS_MT_Q(); } }
+
+function submitOS_MT() {
+  examDone = true;
+  examMode = 'normal';
+  var cor = correctCount;
+  var score = Math.round(cor / examQs.length * 100);
+  var C = document.getElementById('content');
+  var h = '<div class="res-card"><div style="font-size:18px;color:#555">\u914d\u4f0d\u9898\u6d4b\u9a8c \u00b7 \u7b2c ' + examRound + ' \u8f6e\u6210\u7ee9</div>';
+  var scoreColor = (score >= 80) ? '#2e7d32' : '#e65100';
+  h += '<div class="res-score" style="color:' + scoreColor + '">' + score + '\u5206</div>';
+  h += '<div style="color:#555;font-size:15px">\u7b54\u5bf9 ' + cor + ' \u9898 / \u5171 ' + examQs.length + ' \u9898</div>';
+  if (cor === examQs.length) h += '<div style="color:#2e7d32;margin-top:10px;font-size:15px">&#127881; \u6ee1\u5206\uff01\u592a\u68d2\u4e86\uff01</div>';
+  h += '<div class="btn-row"><button class="btn btn-pri" style="background:linear-gradient(135deg,#8e24aa,#6a1b9a);margin-right:10px" onclick="startOS_MT()">&#8635; \u518d\u6765\u4e00\u8f6e</button>';
+  h += '<button class="btn btn-sec" onclick="switchTab(2)">&#128214;&#9961; \u67e5\u770b\u9519\u9898\u672c</button></div></div>';
+  C.innerHTML = h;
+}
+
 // ========== 2. 错题本 ==========
 function renderWB(C) {
   var wb = getWB();
@@ -4743,7 +4881,18 @@ function renderWB(C) {
       if (dq) shortText = id + ' ' + dq.question.substring(0, 70) + '...';
     } else {
       var oq = null;
-      for (var oi = 0; oi < OS_SC.length; oi++) { if (String(OS_SC[oi].id) === id) { oq = OS_SC[oi]; break; } }
+      if (id.indexOf('mt_') === 0) {
+        var mtParts = id.split('_');
+        var mtGroup = parseInt(mtParts[1]);
+        var mtIdx = parseInt(mtParts[2]);
+        for (var mi2 = 0; mi2 < OS_MT.length; mi2++) {
+          if (OS_MT[mi2].id === mtGroup) {
+            oq = {q: '\u3010\u914d\u4f0d\u7b2c' + mtGroup + '\u7ec4\u3011' + OS_MT[mi2].left[mtIdx] + ' \u2192 ?'};
+            break;
+          }
+        }
+      }
+      if (!oq) { for (var oi = 0; oi < OS_SC.length; oi++) { if (String(OS_SC[oi].id) === id) { oq = OS_SC[oi]; break; } } }
       if (!oq) { for (var ti2 = 0; ti2 < OS_TF.length; ti2++) { if (String(OS_TF[ti2].id) === id) { oq = OS_TF[ti2]; break; } } }
       if (oq) shortText = id + ' ' + oq.q.substring(0, 70) + '...';
     }
@@ -4787,9 +4936,32 @@ function renderAna(C) {
     } else {
       var oq = null;
       var oqType = '';
-      for (var oi = 0; oi < OS_SC.length; oi++) { if (String(OS_SC[oi].id) === id) { oq = OS_SC[oi]; oqType = 'sc'; break; } }
+      if (id.indexOf('mt_') === 0) {
+        var mtP = id.split('_');
+        var mtG = parseInt(mtP[1]);
+        var mtI = parseInt(mtP[2]);
+        for (var mtm = 0; mtm < OS_MT.length; mtm++) {
+          if (OS_MT[mtm].id === mtG) {
+            oqType = 'mt';
+            var mtAnsLetter = OS_MT[mtm].a[mtI];
+            var mtAnsIdx = mtAnsLetter.charCodeAt(0) - 65;
+            h += '<div style="font-weight:600;margin-bottom:10px;font-size:14px;color:#333"><span style="background:#f3e5f5;color:#7b1fa2;padding:2px 8px;border-radius:8px;font-size:12px;margin-right:6px">\u914d\u4f0d\u9898</span>\u3010\u914d\u4f0d\u7b2c' + mtG + '\u7ec4\u3011' + eh(OS_MT[mtm].left[mtI]) + ' \u2192 ?</div>';
+            h += '<div class="q-opts" style="margin-top:8px">';
+            for (var moi = 0; moi < OS_MT[mtm].right.length; moi++) {
+              var mtL = 'ABCDE'[moi];
+              var mtCls = (mtL === mtAnsLetter) ? ' correct' : '';
+              h += '<div class="q-opt' + mtCls + '">' + mtL + '. ' + eh(OS_MT[mtm].right[moi]) + '</div>';
+            }
+            h += '</div>';
+            h += '<div style="padding:8px 14px;background:#e8f5e9;border-radius:8px;color:#2e7d32;font-weight:600;font-size:14px;margin-top:8px">&#9989; \u6b63\u786e\u7b54\u6848\uff1a' + mtAnsLetter + '. ' + eh(OS_MT[mtm].right[mtAnsIdx] || '') + '</div>';
+            oq = true;
+            break;
+          }
+        }
+      }
+      if (!oq) { for (var oi = 0; oi < OS_SC.length; oi++) { if (String(OS_SC[oi].id) === id) { oq = OS_SC[oi]; oqType = 'sc'; break; } } }
       if (!oq) { for (var ti3 = 0; ti3 < OS_TF.length; ti3++) { if (String(OS_TF[ti3].id) === id) { oq = OS_TF[ti3]; oqType = 'tf'; break; } } }
-      if (oq) {
+      if (oq && oqType !== 'mt') {
         var typeLabel = (oqType === 'sc') ? '单选题' : '判断题';
         h += '<div style="font-weight:600;margin-bottom:10px;font-size:14px;color:#333"><span style="background:#e3f2fd;color:#1565c0;padding:2px 8px;border-radius:8px;font-size:12px;margin-right:6px">' + typeLabel + '</span>' + eh(oq.q) + '</div>';
         
